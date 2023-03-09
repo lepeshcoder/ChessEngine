@@ -8,17 +8,17 @@ class IMoveGen
 {
 public:
 
-	virtual void MakeMove(Position& position, TMove move) = 0;
+	// Change position accourding move
+	virtual void makeMove(Position& position, TMove move) = 0;
 
-	virtual void UnMakeMove(Position& position, TMove move) = 0;
-
-	virtual std::vector<TMove> GenerateAndSortAllCaptures(Position& position, PieceColors activeColor) = 0;
-
-	virtual std::vector<TMove> GenerateAndSortAllMoves(Position& position, PieceColors activeColor) = 0;
-
-private:
-
-
+	// Cancels move in position
+	virtual void unMakeMove(Position& position, TMove move) = 0;
+	
+	// Give an array of all captures sorted by capture cost
+	virtual std::vector<TMove> generateAndSortAllCaptures(Position& position) = 0;
+	
+	// Give an array of all Moves sorted by ...
+	virtual std::vector<TMove> generateAndSortAllMoves(Position& position) = 0;
    
 };
 #endif 

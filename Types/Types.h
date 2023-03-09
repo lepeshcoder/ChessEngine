@@ -9,19 +9,26 @@ typedef long long int_64;
 typedef unsigned long long  uint_64;
 typedef int int_32;
 typedef unsigned int uint_32;
-typedef unsigned char byte;
+typedef unsigned char uint_8;
+typedef char int_8;
 
 
 enum MoveTypes { DEFAULT_MOVE = 0, CAPTURE, FIRST_PAWN_MOVE, EN_PASSANT, LONG_CASTLE, SHORT_CASTLE,
 				 TRANSFORM, CAPTURE_TRANSFORM };
 
-enum PieceTypes { KING = 0, QUEEN, ROOK, BISHOP, KNIGHT, PAWN };
+enum PieceTypes { KING = 0, QUEEN, ROOK, BISHOP, KNIGHT, PAWN, NOTHING };
 
 enum PieceColors { WHITE = 0, BLACK };
 
 struct TMove
 {
-	
+	int_8 from, to;
+	MoveTypes moveType;
+
+	// PieceType of piece that have eaten
+	PieceTypes opFigure; 
+	// in case CAPTURE_TRANSFORM contains the type of piece the pawn has become
+	PieceTypes transformPiece;
 };
 
 struct Position
@@ -34,9 +41,9 @@ struct Position
 	bool bShortCastle;
 	bool wLongCastle;
 	bool bLongCastle;
-	byte fiftyMovesRule, prevFiftyMovesRule; 
-	byte moveCounter;
-	int_32 material; // position evaluation score (Including only figures) 
+	uint_8 fiftyMovesRule, prevFiftyMovesRule; 
+	uint_8 moveCounter;
+	int_8 material; // position evaluation score (Including only figures) 
 };
 
 
@@ -53,7 +60,7 @@ namespace SearchTypes {
 }
 
 namespace EvaluationTypes {
-	typedef int EvalScore;
+	typedef int_32 EvalScore;
 }
 
 namespace UCITypes {

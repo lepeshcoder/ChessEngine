@@ -12,13 +12,21 @@
 
 using namespace std;
 
+
+/*
+*  TODO LIST:
+* 
+*  1) Написать тесты и исправить возникшие ошибки в генерации битбордов ходов фигур
+*  2) Всё таки исправить getBishopMoves и наверняка getRookMoves и getQueenMoves
+*
+*/
 int main()
 {
+	Bitboard test = 0x38000000380000;
 	MoveGen a;
-	a.ViewBitboard(Bitboard(7));
-	std::cout<<"\n\n";
-	std::cout << a.bitScanForward(Bitboard(7))<<"\n\n";
-	std::cout << a.bitScanReverse(Bitboard(7));
+	/*std::cout << a.bitScanForward(test)<<"\n\n";
+	std::cout << a.bitScanReverse(test)<<"\n\n";*/
+
 }
 
 #endif

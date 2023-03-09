@@ -13,7 +13,7 @@ using namespace MoveGenConstants;
 
 class MoveGen : public IMoveGen
 {
-private:
+public:
 	// Rays array includes rays form every cell in every direction (See DIRECTIONS in Types.h) 
 	Bitboard rays[64][8];
 	
@@ -56,6 +56,7 @@ public:
 	void viewBitboard(const Bitboard& bb, const std::string& filePath = "");
 
 	// A bitscan reverse is used to find the index of the most significant 1 bit 
+	// msb - 63 lsb - 0
 	int bitScanReverse(Bitboard bb);
 
 	//  A bitscan forward is used to find the index of the least significant 1 bit
@@ -114,6 +115,7 @@ public:
 
 	// Returns bitboard with all bishop moves for cell and set of blockers 
 	// Blockers - all peaces without a piece for which moves are counted
+	// A1 -
 	Bitboard getBishopMoves(int sq, Bitboard blockers);
 
 	// Returns bitboard with all rook moves for cell and a set of blockers

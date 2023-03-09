@@ -114,5 +114,182 @@ namespace EndGameTableConstants
 
 }
 
-#endif // ! 
+namespace TestConstants
+{
+	/*
+	  0 0 0 0 0 0 0 0
+	  0 0 0 1 0 0 0 0
+	  0 0 0 0 0 0 1 0
+	  0 0 0 0 1 0 0 0 
+	  0 0 1 1 0 0 0 0
+	  0 0 0 0 0 0 0 1
+      1 1 0 0 0 1 0 0
+      0 0 0 0 0 0 0 0
+	*/
+	constexpr Bitboard getPawnMovesCase1W = 0x1002083001C400;
+
+	/*
+	  0 0 0 1 0 0 0 0
+      0 0 0 0 0 0 1 0
+      0 0 0 0 1 0 0 0
+      0 0 1 1 0 0 0 0
+      1 1 0 0 0 1 0 1 
+      1 1 0 0 0 1 0 0
+      0 0 0 0 0 0 0 0
+      0 0 0 0 0 0 0 0
+	*/
+	constexpr Bitboard getPawnMovesCase1WExpected = 0x10020830C5C40000;
+
+	/*
+	  0 0 0 0 0 0 0 0  
+	  1 1 0 0 0 0 0 0    
+	  0 0 1 0 0 0 0 0    
+	  0 0 0 1 0 0 0 0    
+	  0 0 0 0 0 1 0 0 
+	  0 0 0 1 0 0 0 0   
+	  0 0 0 0 0 0 0 1    
+	  0 0 0 0 0 0 0 0    
+	*/
+	constexpr Bitboard getPawnMovesCase1B = 0xC0201004100100;
+
+	/*
+	  0 0 0 0 0 0 0 0
+      0 0 0 0 0 0 0 0
+      1 1 0 0 0 0 0 0
+      1 1 1 0 0 0 0 0
+	  0 0 0 1 0 0 0 0  
+	  0 0 0 0 0 1 0 0
+	  0 0 0 1 0 0 0 0
+	  0 0 0 0 0 0 0 1
+	*/
+	constexpr Bitboard getPawnMovesCase1BExpected = 0xC0E010041001;
+
+
+	/*
+	* 
+	*/
+	constexpr Bitboard getPawnCapturesCase1B = 0x80200008010000;
+	
+	/*
+	* 
+	*/
+	constexpr Bitboard getPawnCapturesCase1W = 0x5021084204800;
+	
+	/*
+	* 
+	*/
+	constexpr Bitboard getPawnCapturesCase1WExpected = 0xA05284A50B40000;
+	
+	/*
+	* 
+	*/
+	constexpr Bitboard getPawnCapturesCase1BExpected = 0x405000140200;
+
+
+	/*
+	  1 0 0 0 0 0 0 0    
+	  0 0 0 0 0 0 0 0    
+	  0 0 0 0 0 0 0 0    
+	  0 0 0 0 0 0 0 0   
+	  0 0 0 0 1 0 0 0   
+	  0 0 0 0 0 0 0 0   
+	  0 0 0 0 0 0 0 0   
+	  0 0 0 0 0 0 0 0   
+	*/
+	constexpr Bitboard getKnightMovesCase1 = 0x8000000008000000;
+
+	/*
+      0 0 0 0 0 0 0 0
+      0 0 1 0 0 0 0 0
+      0 1 0 1 0 1 0 0
+	  0 0 1 0 0 0 1 0
+	  0 0 0 0 0 0 0 0 
+	  0 0 1 0 0 0 1 0
+      0 0 0 1 0 1 0 0
+      0 0 0 0 0 0 0 0
+	*/
+	constexpr Bitboard getKnightMovesCase1Expected = 0x0020542200221400;
+
+
+	/*
+	  0 0 0 0 0 0 0 0    
+	  0 0 0 0 0 0 0 0    
+	  0 0 0 0 0 0 0 0   
+	  0 0 0 0 0 0 0 0    
+	  0 0 0 0 0 0 0 0    
+	  0 0 0 0 1 0 0 0   
+	  0 0 0 0 0 0 0 0    
+	  0 0 0 0 0 0 0 1    
+	*/
+	constexpr Bitboard getKingMovesCase1 = 0x80001;
+
+	/*
+      0 0 0 0 0 0 0 0
+      0 0 0 0 0 0 0 0
+      0 0 0 0 0 0 0 0
+      0 0 0 0 0 0 0 0
+      0 0 0 1 1 1 0 0 
+      0 0 0 1 0 1 0 0
+      0 0 0 1 1 1 1 1
+      0 0 0 0 0 0 1 0
+	*/
+	constexpr Bitboard getKingMovesCase1Expected = 0x1C141F02;
+	
+
+	/*
+		   bishops          blockers           expected
+	    0 0 0 0 0 0 0 0  0 0 0 0 1 0 0 0    0 0 0 0 1 0 0 0
+		0 0 0 0 0 0 0 0  0 1 0 0 0 0 0 0    0 1 0 1 0 0 0 0
+		0 0 1 0 0 0 0 0  0 1 0 0 0 0 0 0    0 0 0 0 0 0 0 0
+		0 0 0 0 0 0 0 0  0 0 0 0 0 0 0 0    0 1 0 1 0 0 0 0
+		0 0 0 0 0 0 0 0  1 0 0 0 0 0 0 0    1 0 0 0 1 0 0 0 
+		0 0 0 0 0 0 0 0  0 0 0 0 0 1 0 0    0 0 0 0 0 1 0 0
+		0 0 0 0 0 0 0 0  0 0 0 0 0 1 0 0    0 0 0 0 0 0 0 0
+		0 0 0 0 0 0 0 0  0 0 1 0 0 0 0 0    0 0 0 0 0 0 0 0
+          
+	*/
+	constexpr int getBishopMovesSq = 45;
+	
+	constexpr Bitboard getBishopMovesCase1Expected = 0x850005088040000;
+
+	constexpr Bitboard getBishopMovesCase1Blockers = 0x840400080040420;
+
+
+	/*
+	        rook             blockers           expected
+	   0 0 0 0 0 0 0 0    0 1 0 0 0 0 0 0    0 0 0 0 0 0 0 0 
+	   0 0 0 0 0 0 0 0    1 0 1 0 1 0 0 0    0 0 1 0 0 0 0 0 
+	   0 0 0 0 0 0 0 0    0 0 0 0 0 0 0 0    0 0 1 0 0 0 0 0 
+	   0 0 1 0 0 0 0 0    0 1 0 0 0 1 0 0    0 1 0 1 1 1 0 0  
+	   0 0 0 0 0 0 0 0    0 0 0 0 0 0 0 0    0 0 1 0 0 0 0 0 
+	   0 0 0 0 0 0 0 0    0 0 0 0 1 0 0 0    0 0 1 0 0 0 0 0 
+	   0 0 0 0 0 0 0 0    1 0 0 0 0 0 1 0    0 0 1 0 0 0 0 0 
+	   0 0 0 0 0 0 0 0    0 0 1 0 0 0 0 0    0 0 1 0 0 0 0 0 
+	*/
+	constexpr int getRookMovesSq = 37;
+
+	constexpr Bitboard getRookMovesCase1Blockers = 0x40A8004400088220;
+
+	constexpr Bitboard getRookMovesCase1Expected = 0x20205C20202020;
+
+	/*
+		     queen             blockers          expected
+		0 0 0 0 0 0 0 0    0 1 0 0 0 0 0 1    0 0 0 0 0 1 0 1 
+		0 0 0 0 0 0 0 0    1 0 1 0 1 0 0 0    0 0 0 0 1 1 1 0 
+		0 0 0 0 0 1 0 0    0 0 1 0 0 0 0 1    0 0 1 1 1 0 1 1 
+		0 0 0 0 0 0 0 0    0 1 0 0 0 1 1 0    0 0 0 0 1 1 1 0 
+		0 0 0 0 0 0 0 0    0 0 0 0 0 0 0 0    0 0 0 1 0 0 0 0 
+		0 0 0 0 0 0 0 0    0 0 1 0 1 0 0 0    0 0 1 0 0 0 0 0 
+		0 0 0 0 0 0 0 0    1 0 0 0 0 0 1 0    0 0 0 0 0 0 0 0 
+		0 0 0 0 0 0 0 0    0 0 1 0 0 0 0 0    0 0 0 0 0 0 0 0 
+     
+	*/
+	constexpr int getQueenMovesSq = 42;
+
+	constexpr Bitboard getQueenMovesCase1Blockers = 0x41A8214600288220;
+
+	constexpr Bitboard getQueenMovesCase1Expected = 0x50E3B0E10200000;
+}
+
+#endif 
 

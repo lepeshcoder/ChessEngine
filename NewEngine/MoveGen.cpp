@@ -103,15 +103,15 @@ void MoveGen::initRays()
 {
 	for (int i = 0; i < 64; i++)
 	{
-		rays[NORTH][i] = (FILE_H & ~RANK_1) << i;
-		rays[SOUTH][i] = (FILE_A & ~RANK_8) >> (63 - i);
-		rays[EAST][i] = (RANK_1 >> (8 - (i & 7))) << ((i >> 3) << 3);
-		rays[WEST][i] = ((RANK_1 << ((i & 7) + 1)) & ~RANK_2) << ((i >> 3) << 3);
+		rays[i][NORTH] = (FILE_H & ~RANK_1) << i;
+		rays[i][SOUTH] = (FILE_A & ~RANK_8) >> (63 - i);
+		rays[i][EAST] = (RANK_1 >> (8 - (i & 7))) << ((i >> 3) << 3);
+		rays[i][WEST] = ((RANK_1 << ((i & 7) + 1)) & ~RANK_2) << ((i >> 3) << 3);
 
-		rays[NORTH_WEST][i] = westN(DIAG_A8H1 & ~RANK_1, col(i)) << (row(i) << 3);
-		rays[NORTH_EAST][i] = eastN(DIAG_A1H8 & ~RANK_1, 7 - col(i)) << (row(i) << 3);
-		rays[SOUTH_EAST][i] = eastN(DIAG_A8H1 & ~RANK_8, 7 - col(i)) >> ((7 - row(i)) << 3);
-		rays[SOUTH_WEST][i] = westN(DIAG_A1H8 & ~RANK_8, col(i)) >> ((7 - row(i)) << 3);
+		rays[i][NORTH_WEST] = westN(DIAG_A8H1 & ~RANK_1, col(i)) << (row(i) << 3);
+		rays[i][NORTH_EAST] = eastN(DIAG_A1H8 & ~RANK_1, 7 - col(i)) << (row(i) << 3);
+		rays[i][SOUTH_EAST] = eastN(DIAG_A8H1 & ~RANK_8, 7 - col(i)) >> ((7 - row(i)) << 3);
+		rays[i][SOUTH_WEST] = westN(DIAG_A1H8 & ~RANK_8, col(i)) >> ((7 - row(i)) << 3);
 	}
 }
 
@@ -160,10 +160,10 @@ void MoveGen::initBishopMasks()
 	for (int i = 0; i < 64; i++)
 	{
 		bishopMasks[i] = 0;
-		bishopMasks[i] |= (rays[NORTH_EAST][i]);
-		bishopMasks[i] |= (rays[NORTH_WEST][i]);
-		bishopMasks[i] |= (rays[SOUTH_EAST][i]);
-		bishopMasks[i] |= (rays[SOUTH_WEST][i]);
+		bishopMasks[i] |= (rays[i][NORTH_EAST]);
+		bishopMasks[i] |= (rays[i][NORTH_WEST]);
+		bishopMasks[i] |= (rays[i][SOUTH_EAST]);
+		bishopMasks[i] |= (rays[i][SOUTH_WEST]);
 		bishopMasks[i] &= ~EDGES;
 	}
 }
@@ -283,26 +283,26 @@ Bitboard MoveGen::getKingMoves(Bitboard king)
 
 Bitboard MoveGen::getBishopMoves(int sq, Bitboard blockers)
 {
-	Bitboard attacks = 0;
-	attacks |= rays[NORTH_EAST][sq];
-	if (rays[NORTH_EAST][sq] & blockers)
+	Bitboard attacks = Bitboard(0);
+	attacks |= rays[sq][NORTH_EAST];
+	if (rays[sq][NORTH_EAST] & blockers)
 	{
-		attacks &= ~(rays[NORTH_EAST][bitScanReverse(rays[NORTH_EAST][sq] & blockers)]);
+		attacks &= ~(rays[bitScanReverse(rays[sq][NORTH_EAST] & blockers)][NORTH_EAST]);
 	}
-	attacks |= rays[NORTH_WEST][sq];
-	if (rays[NORTH_WEST][sq] & blockers)
+	attacks |= rays[sq][NORTH_WEST];
+	if (rays[sq][NORTH_WEST] & blockers)
 	{
-		attacks &= ~(rays[NORTH_WEST][bitScanReverse(rays[NORTH_WEST][sq] & blockers)]);
+		attacks &= ~(rays[bitScanReverse(rays[sq][NORTH_WEST] & blockers)][NORTH_WEST]);
 	}
-	attacks |= rays[SOUTH_EAST][sq];
-	if (rays[SOUTH_EAST][sq] & blockers)
+	attacks |= rays[sq][SOUTH_EAST];
+	if (rays[sq][SOUTH_EAST] & blockers)
 	{
-		attacks &= ~(rays[SOUTH_EAST][bitScanForward(rays[SOUTH_EAST][sq] & blockers)]);
+		attacks &= ~(rays[bitScanReverse(rays[sq][SOUTH_EAST] & blockers)][SOUTH_EAST]);
 	}
-	attacks |= rays[SOUTH_WEST][sq];
-	if (rays[SOUTH_WEST][sq] & blockers)
+	attacks |= rays[sq][SOUTH_WEST];
+	if (rays[sq][SOUTH_WEST] & blockers)
 	{
-		attacks &= ~(rays[SOUTH_WEST][bitScanForward(rays[SOUTH_WEST][sq] & blockers)]);
+		attacks &= ~(rays[bitScanReverse(rays[sq][SOUTH_WEST] & blockers)][SOUTH_WEST]);
 	}
 	return attacks;
 }
@@ -310,25 +310,25 @@ Bitboard MoveGen::getBishopMoves(int sq, Bitboard blockers)
 Bitboard MoveGen::getRookMoves(int sq, Bitboard blockers)
 {
 	Bitboard attacks = 0;
-	attacks |= rays[NORTH][sq];
-	if (rays[NORTH][sq] & blockers)
+	attacks |= rays[sq][NORTH];
+	if (rays[sq][NORTH] & blockers)
 	{
-		attacks &= ~(rays[NORTH][bitScanReverse(rays[NORTH][sq] & blockers)]);
+		attacks &= ~(rays[bitScanReverse(rays[sq][NORTH] & blockers)][NORTH]);
 	}
-	attacks |= rays[SOUTH][sq];
-	if (rays[SOUTH][sq] & blockers)
+	attacks |= rays[sq][SOUTH];
+	if (rays[sq][SOUTH] & blockers)
 	{
-		attacks &= ~(rays[SOUTH][bitScanForward(rays[SOUTH][sq] & blockers)]);
+		attacks &= ~(rays[bitScanForward(rays[sq][SOUTH] & blockers)][SOUTH]);
 	}
-	attacks |= rays[EAST][sq];
-	if (rays[EAST][sq] & blockers)
+	attacks |= rays[sq][EAST];
+	if (rays[sq][EAST] & blockers)
 	{
-		attacks &= ~(rays[EAST][bitScanForward(rays[EAST][sq] & blockers)]);
+		attacks &= ~(rays[bitScanForward(rays[sq][EAST] & blockers)][EAST]);
 	}
-	attacks |= rays[WEST][sq];
-	if (rays[WEST][sq] & blockers)
+	attacks |= rays[sq][WEST];
+	if (rays[sq][WEST] & blockers)
 	{
-		attacks &= ~(rays[WEST][bitScanReverse(rays[WEST][sq] & blockers)]);
+		attacks &= ~(rays[bitScanReverse(rays[sq][WEST] & blockers)][WEST]);
 	}
 	return attacks;
 }

@@ -148,10 +148,10 @@ void MoveGen::initRookMasks()
 	for (int i = 0; i < 64; i++)
 	{
 		rookMasks[i] = 0;
-		rookMasks[i] |= (rays[NORTH][i] & (~RANK_8));
-		rookMasks[i] |= (rays[SOUTH][i] & (~RANK_1));
-		rookMasks[i] |= (rays[EAST][i] & (~FILE_H));
-		rookMasks[i] |= (rays[WEST][i] & (~FILE_A));
+		rookMasks[i] |= (rays[i][NORTH] & (~RANK_8));
+		rookMasks[i] |= (rays[i][SOUTH] & (~RANK_1));
+		rookMasks[i] |= (rays[i][EAST] & (~FILE_H));
+		rookMasks[i] |= (rays[i][WEST] & (~FILE_A));
 	}
 }
 
@@ -336,4 +336,47 @@ Bitboard MoveGen::getRookMoves(int sq, Bitboard blockers)
 Bitboard MoveGen::getQueenMoves(int sq, Bitboard blockers)
 {
 	return (getBishopMoves(sq, blockers) | getRookMoves(sq, blockers));
+}
+
+Bitboard MoveGen::getCachedPawnMoves(int sq, PieceColors color)
+{
+	if (color == WHITE) return wPawnMoveCache[sq];
+	else return bPawnMoveCache[sq];
+}
+
+Bitboard MoveGen::getCachedPawnCaptures(int sq, PieceColors color)
+{
+	if (color == WHITE) return wPawnCache[sq];
+	else return bPawnCache[sq];
+}
+
+Bitboard MoveGen::getCachedKnightMoves(int sq)
+{
+	return knightCache[sq];
+}
+
+Bitboard MoveGen::getCachedBishopMoves(int sq, Bitboard blockers)
+{
+	blockers &= bishopMasks[sq];
+	Bitboard key = _pext_u64(blockers, bishopMasks[sq]);
+	return bishopCache[sq][key];
+}
+
+Bitboard MoveGen::getCachedRookMoves(int sq, Bitboard blockers)
+{
+	blockers &= rookMasks[sq];
+	Bitboard key = _pext_u64(blockers, rookMasks[sq]);
+	return rookCache[sq][key];
+}
+
+Bitboard MoveGen::getCachedQueenMoves(int sq, Bitboard blockers)
+{
+	blockers &= queenMasks[sq];
+	Bitboard key = _pext_u64(blockers, queenMasks[sq]);
+	return queenCache[sq][key];
+}
+
+Bitboard MoveGen::getCachedKingMoves(int sq)
+{
+	return kingCache[sq];
 }

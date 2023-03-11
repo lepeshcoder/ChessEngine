@@ -13,7 +13,7 @@ using namespace MoveGenConstants;
 
 class MoveGen : public IMoveGen
 {
-public:
+private:
 	// Rays array includes rays form every cell in every direction (See DIRECTIONS in Types.h) 
 	Bitboard rays[64][8];
 	
@@ -28,7 +28,7 @@ public:
 	Bitboard** rookCache;
 	Bitboard** queenCache;
 
-	/* Caches arrays for not-sliding peaces include all possible moves
+	/* Caches arrays for non-sliding peaces include all possible moves
 	  at empty board for every cell */
 	Bitboard kingCache[64];
 	Bitboard knightCache[64];
@@ -115,7 +115,7 @@ public:
 
 	// Returns bitboard with all bishop moves for cell and set of blockers 
 	// Blockers - all peaces without a piece for which moves are counted
-	// A1 -
+	// bottome left cell is 0 and top right is 63
 	Bitboard getBishopMoves(int sq, Bitboard blockers);
 
 	// Returns bitboard with all rook moves for cell and a set of blockers
@@ -124,6 +124,21 @@ public:
 	// Returns bitboard with all queen moves for cell and a set of blockers
 	Bitboard getQueenMoves(int sq, Bitboard blockers);
 
+
+	// Returns cached pseudolegal moves
+	Bitboard getCachedPawnMoves(int sq, PieceColors color);
+
+	Bitboard getCachedPawnCaptures(int sq, PieceColors color);
+
+	Bitboard getCachedKnightMoves(int sq);
+
+	Bitboard getCachedBishopMoves(int sq, Bitboard blockers);
+
+	Bitboard getCachedRookMoves(int sq, Bitboard blockers);
+
+	Bitboard getCachedQueenMoves(int sq, Bitboard blockers);
+
+	Bitboard getCachedKingMoves(int sq);
 
 
 };

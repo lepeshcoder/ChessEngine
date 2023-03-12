@@ -21,6 +21,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Search", "Search\Search.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EndgameTable", "EndgameTables\EndgameTables.vcxproj", "{9B465B16-4207-4FEF-B91E-73E985AC9C9D}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UCI_Сommunication", "UCI_Сommunication\UCI_Сommunication.vcxproj", "{B60448BC-5F9D-4968-BCA7-9829FF036FCD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -93,6 +95,14 @@ Global
 		{9B465B16-4207-4FEF-B91E-73E985AC9C9D}.Release|x64.Build.0 = Release|x64
 		{9B465B16-4207-4FEF-B91E-73E985AC9C9D}.Release|x86.ActiveCfg = Release|Win32
 		{9B465B16-4207-4FEF-B91E-73E985AC9C9D}.Release|x86.Build.0 = Release|Win32
+		{B60448BC-5F9D-4968-BCA7-9829FF036FCD}.Debug|x64.ActiveCfg = Debug|x64
+		{B60448BC-5F9D-4968-BCA7-9829FF036FCD}.Debug|x64.Build.0 = Debug|x64
+		{B60448BC-5F9D-4968-BCA7-9829FF036FCD}.Debug|x86.ActiveCfg = Debug|Win32
+		{B60448BC-5F9D-4968-BCA7-9829FF036FCD}.Debug|x86.Build.0 = Debug|Win32
+		{B60448BC-5F9D-4968-BCA7-9829FF036FCD}.Release|x64.ActiveCfg = Release|x64
+		{B60448BC-5F9D-4968-BCA7-9829FF036FCD}.Release|x64.Build.0 = Release|x64
+		{B60448BC-5F9D-4968-BCA7-9829FF036FCD}.Release|x86.ActiveCfg = Release|Win32
+		{B60448BC-5F9D-4968-BCA7-9829FF036FCD}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -34,6 +34,17 @@ MoveGen::MoveGen()
 	initBishopCache();
 	initRookCache();
 	initQueenCache();
+
+	for (int i = 0; i < 64; i++)
+	{
+		wCheckDetectorCache[i] = new uint_8*[8];
+		bCheckDetectorCache[i] = new uint_8*[8];
+		for (int j = 0; j < 8; j++)
+		{
+			wCheckDetectorCache[i][j] = new uint_8[8];
+			bCheckDetectorCache[i][j] = new uint_8[8];
+		}
+	}
 }
 
 void MoveGen::makeMove(Position& position, TMove move)
@@ -287,12 +298,12 @@ Bitboard MoveGen::getBishopMoves(int sq, Bitboard blockers)
 	attacks |= rays[sq][NORTH_EAST];
 	if (rays[sq][NORTH_EAST] & blockers)
 	{
-		attacks &= ~(rays[bitScanReverse(rays[sq][NORTH_EAST] & blockers)][NORTH_EAST]);
+		attacks &= ~(rays[bitScanForward(rays[sq][NORTH_EAST] & blockers)][NORTH_EAST]);
 	}
 	attacks |= rays[sq][NORTH_WEST];
 	if (rays[sq][NORTH_WEST] & blockers)
 	{
-		attacks &= ~(rays[bitScanReverse(rays[sq][NORTH_WEST] & blockers)][NORTH_WEST]);
+		attacks &= ~(rays[bitScanForward(rays[sq][NORTH_WEST] & blockers)][NORTH_WEST]);
 	}
 	attacks |= rays[sq][SOUTH_EAST];
 	if (rays[sq][SOUTH_EAST] & blockers)
@@ -313,22 +324,22 @@ Bitboard MoveGen::getRookMoves(int sq, Bitboard blockers)
 	attacks |= rays[sq][NORTH];
 	if (rays[sq][NORTH] & blockers)
 	{
-		attacks &= ~(rays[bitScanReverse(rays[sq][NORTH] & blockers)][NORTH]);
+		attacks &= ~(rays[bitScanForward(rays[sq][NORTH] & blockers)][NORTH]);
 	}
 	attacks |= rays[sq][SOUTH];
 	if (rays[sq][SOUTH] & blockers)
 	{
-		attacks &= ~(rays[bitScanForward(rays[sq][SOUTH] & blockers)][SOUTH]);
+		attacks &= ~(rays[bitScanReverse(rays[sq][SOUTH] & blockers)][SOUTH]);
 	}
 	attacks |= rays[sq][EAST];
 	if (rays[sq][EAST] & blockers)
 	{
-		attacks &= ~(rays[bitScanForward(rays[sq][EAST] & blockers)][EAST]);
+		attacks &= ~(rays[bitScanReverse(rays[sq][EAST] & blockers)][EAST]);
 	}
 	attacks |= rays[sq][WEST];
 	if (rays[sq][WEST] & blockers)
 	{
-		attacks &= ~(rays[bitScanReverse(rays[sq][WEST] & blockers)][WEST]);
+		attacks &= ~(rays[bitScanForward(rays[sq][WEST] & blockers)][WEST]);
 	}
 	return attacks;
 }
@@ -379,4 +390,73 @@ Bitboard MoveGen::getCachedQueenMoves(int sq, Bitboard blockers)
 Bitboard MoveGen::getCachedKingMoves(int sq)
 {
 	return kingCache[sq];
+}
+
+bool MoveGen::checkDetector(int kingsq, int kingcolor,
+	int lastmovefiguretype, int lastmovefiguresq, Bitboard blockers)
+{
+	uint_8 translateKingSq = checkTranslationTable[kingsq];
+
+	uint_8 translateKingSqValue = checkArray[translateKingSq];
+
+	uint_8 translateLastMoveFigureSq = checkTranslationTable[lastmovefiguresq];
+
+	uint_8 translateLastMoveFigureSqValue = checkArray[translateLastMoveFigureSq];
+	
+	int temp = base + translateKingSq - translateLastMoveFigureSq;
+
+	uint_8 figureCode = checkFigureCode[lastmovefiguretype];
+
+	uint_8 cellvalue = checkArray[temp];
+
+	uint_8 isPossibleCheck = checkArray[temp] & figureCode;
+
+	if (!isPossibleCheck) return false;
+	
+	switch (lastmovefiguretype)
+	{
+	case PieceTypes::PAWN:
+	{
+		if (kingcolor == PieceColors::WHITE)
+		{
+			if (lastmovefiguresq > kingsq) return true;
+			else return false;
+		}
+		if (kingcolor == PieceColors::BLACK)
+		{
+			if (lastmovefiguresq < kingsq) return true;
+			else return false;
+		}
+		break;
+	}
+	case PieceTypes::KNIGHT:
+	{
+		return true;
+		break;
+	}
+	case PieceTypes::BISHOP:
+	{
+		Bitboard king = Bitboard(1) << kingsq;
+		return ((getCachedBishopMoves(lastmovefiguresq, blockers) & king) ? true : false);
+		break;
+	}
+	case PieceTypes::ROOK:
+	{
+		Bitboard king = Bitboard(1) << kingsq;
+		return ((getCachedRookMoves(lastmovefiguresq, blockers) & king) ? true : false);
+		break;
+	}
+	case PieceTypes::QUEEN:
+	{
+		Bitboard king = Bitboard(1) << kingsq;
+		viewBitboard(king);
+		std::cout << "\n\n";
+		viewBitboard(blockers);
+		std::cout << "\n\n";
+		viewBitboard(getCachedQueenMoves(lastmovefiguresq, blockers));
+		std::cout << "\n\n";
+		return ((getCachedQueenMoves(lastmovefiguresq, blockers) & king) ? true : false);
+		break;
+	}
+	}
 }

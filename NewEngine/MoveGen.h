@@ -36,6 +36,11 @@ private:
 	Bitboard bPawnCache[64];
 	Bitboard wPawnMoveCache[64];
 	Bitboard bPawnMoveCache[64];
+
+
+	//
+	uint_8** wCheckDetectorCache[64];
+	uint_8** bCheckDetectorCache[64];
 	
 public:
 
@@ -139,6 +144,17 @@ public:
 	Bitboard getCachedQueenMoves(int sq, Bitboard blockers);
 
 	Bitboard getCachedKingMoves(int sq);
+
+
+	// Check detector that returns true if king is under attack by figure that move last 
+	// blockers - all pieces without piece for that we count
+	bool checkDetector(int kingsq, int kingcolor,
+			 int lastmovefiguretype, int lastmovefiguresq, Bitboard blockers);
+
+
+
+
+
 
 
 };

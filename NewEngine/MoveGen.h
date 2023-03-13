@@ -36,11 +36,6 @@ private:
 	Bitboard bPawnCache[64];
 	Bitboard wPawnMoveCache[64];
 	Bitboard bPawnMoveCache[64];
-
-
-	//
-	uint_8** wCheckDetectorCache[64];
-	uint_8** bCheckDetectorCache[64];
 	
 public:
 
@@ -52,9 +47,9 @@ public:
 
 	void unMakeMove(Position& position, TMove move) override;
 
-	std::vector<TMove> generateAndSortAllCaptures(Position& position) override;
+	TMove* generateAndSortAllCaptures(Position& position) override;
 
-	std::vector<TMove> generateAndSortAllMoves(Position& position) override;
+	TMove* generateAndSortAllMoves(Position& position) override;
 
 //private:
 	// View bitboard to stdout or file
@@ -62,10 +57,10 @@ public:
 
 	// A bitscan reverse is used to find the index of the most significant 1 bit 
 	// msb - 63 lsb - 0
-	int bitScanReverse(Bitboard bb);
+	inline int bitScanReverse(Bitboard bb);
 
 	//  A bitscan forward is used to find the index of the least significant 1 bit
-	int bitScanForward(Bitboard bb);
+	inline int bitScanForward(Bitboard bb);
 
 	// Initialize Rays array
 	void initRays();
@@ -131,31 +126,27 @@ public:
 
 
 	// Returns cached pseudolegal moves
-	Bitboard getCachedPawnMoves(int sq, PieceColors color);
+	inline Bitboard getCachedPawnMoves(int sq, PieceColors color);
 
-	Bitboard getCachedPawnCaptures(int sq, PieceColors color);
+	inline Bitboard getCachedPawnCaptures(int sq, PieceColors color);
 
-	Bitboard getCachedKnightMoves(int sq);
+	inline Bitboard getCachedKnightMoves(int sq);
 
-	Bitboard getCachedBishopMoves(int sq, Bitboard blockers);
+	inline Bitboard getCachedBishopMoves(int sq, Bitboard blockers);
 
-	Bitboard getCachedRookMoves(int sq, Bitboard blockers);
+	inline Bitboard getCachedRookMoves(int sq, Bitboard blockers);
 
-	Bitboard getCachedQueenMoves(int sq, Bitboard blockers);
+	inline Bitboard getCachedQueenMoves(int sq, Bitboard blockers);
 
-	Bitboard getCachedKingMoves(int sq);
+	inline Bitboard getCachedKingMoves(int sq);
+
+	inline Bitboard getCachedPieceMoves(int pieceType ,int sq, Bitboard blockers, PieceColors color);
 
 
 	// Check detector that returns true if king is under attack by figure that move last 
 	// blockers - all pieces without piece for that we count
 	bool checkDetector(int kingsq, int kingcolor,
 			 int lastmovefiguretype, int lastmovefiguresq, Bitboard blockers);
-
-
-
-
-
-
 
 };
 

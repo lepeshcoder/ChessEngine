@@ -3,6 +3,9 @@
 
 #include<vector>
 #include<algorithm>
+#include<forward_list>
+#include<map>
+
 
 typedef unsigned long long Bitboard;
 typedef long long int_64;
@@ -16,25 +19,66 @@ typedef char int_8;
 enum MoveTypes { DEFAULT_MOVE = 0, CAPTURE, FIRST_PAWN_MOVE, EN_PASSANT, LONG_CASTLE, SHORT_CASTLE,
 				 TRANSFORM, CAPTURE_TRANSFORM };
 
-enum PieceTypes { KING = 0, QUEEN, ROOK, BISHOP, KNIGHT, PAWN, NOTHING };
+enum PieceTypes { KING = 0, QUEEN, ROOK, BISHOP, KNIGHT, PAWN, NO_TYPE };
 
-enum PieceColors { WHITE = 0, BLACK };
+enum PieceColors { WHITE = 0, BLACK, NO_COLOR };
 
+constexpr int PieceCosts[6]{ 1000,9,5,3,3,1 };
+
+
+
+// 6 bytes
 struct TMove
 {
-	int_8 from, to;
-	MoveTypes moveType;
+	TMove(uint_8 from, uint_8 to, uint_8 movetype,
+		uint_8 opfigure, uint_8 transformpiece, int_8 sortfield)
+	{
+		this->from = from;
+		this->to = to;
+		this->moveType = movetype;
+		this->opFigure = opfigure;
+		this->transformPiece = transformpiece;
+		this->sortField = sortfield;
+	}
 
-	// PieceType of piece that have eaten
-	PieceTypes opFigure; 
+	TMove(){
+		from = to = moveType = opFigure = transformPiece = sortField = 0;
+	}
+
+	uint_8 from, to;
+	uint_8 moveType;
+	// PieceType of piece that have been eaten
+	uint_8 opFigure; 
 	// in case CAPTURE_TRANSFORM contains the type of piece the pawn has become
-	PieceTypes transformPiece;
+	uint_8 transformPiece;
+	int_8 sortField;
 };
+
+
+struct Piece
+{
+	Piece(uint_8 color,uint_8 type)
+	{
+		this->color = color;
+		this->type = type;
+	}
+
+	Piece() {
+		this->color = uint_8(PieceColors::NO_COLOR);
+		this->type =uint_8(PieceTypes::NO_TYPE);
+	}
+
+	uint_8 color;
+	uint_8 type;
+};
+
 
 struct Position
 {
+	// Piece list
+	Piece pieceHash[64];
 	Bitboard pos[2][6]; // Position Description in Bitboards 
-	Bitboard allBlackPeaces, allWhitePeaces; // Bitboard includes all white / black peaces
+	Bitboard allBlackPeaces, allWhitePeaces, allPeaces; // Bitboard includes all white / black peaces
 	Bitboard enPassantField; 
 	PieceColors activeColor;
 	bool wShortCastle; // May black/white can do short/long castle

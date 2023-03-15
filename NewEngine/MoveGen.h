@@ -148,6 +148,12 @@ public:
 	bool checkDetector(int kingsq, int kingcolor,
 			 int lastmovefiguretype, int lastmovefiguresq, Bitboard blockers);
 
+	// Show Move List at Native 
+	void showMoveList(TMove* list);
+
+
+	bool isCastlingPossible(Position& pos, int CastleType);
+
 };
 
 #endif 

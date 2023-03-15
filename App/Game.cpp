@@ -3,7 +3,7 @@
 using namespace Game;
 
 
-PosInfo positionInfo[400] = {};
+PosInfo Game::positionInfo[400] = {};
 
 void Game::initPosition(Position& pos, std::string fenstring)
 {

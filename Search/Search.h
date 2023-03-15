@@ -13,6 +13,7 @@ class Search : ISearch
 public:
 	TMove getBestMove(Position& pos) override;
 
+
 };
 
 #endif // !I_SEARCH

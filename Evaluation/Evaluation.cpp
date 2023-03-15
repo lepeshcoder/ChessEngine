@@ -2,5 +2,5 @@
 
 EvalScore Evaluation::getPositionScore(Position& pos)
 {
-	return EvalScore();
+	return pos.material;
 }

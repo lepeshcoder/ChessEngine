@@ -15,10 +15,10 @@ public:
 	virtual void unMakeMove(Position& position, TMove move) = 0;
 	
 	// Give an array of all captures sorted by capture cost
-	virtual std::vector<TMove> generateAndSortAllCaptures(Position& position) = 0;
+	virtual TMove* generateAndSortAllCaptures(Position& position) = 0;
 	
 	// Give an array of all Moves sorted by ...
-	virtual std::vector<TMove> generateAndSortAllMoves(Position& position) = 0;
+	virtual TMove* generateAndSortAllMoves(Position& position) = 0;
    
 };
 #endif 

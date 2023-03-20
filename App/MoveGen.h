@@ -26,11 +26,15 @@ namespace MoveGen{
 
 	TMove* generateAndSortAllCaptures(Position& position);
 
+	TMove* generateAndSortAllQuietMoves(Position& position);
+
 	TMove* generateAndSortAllMoves(Position& position);
 
 
 		// View bitboard to stdout or file
 	void viewBitboard(const Bitboard& bb, const std::string& filePath = "");
+
+	std::string bbToString(Bitboard& bb);
 
 	// A bitscan reverse is used to find the index of the most significant 1 bit 
 	// msb - 63 lsb - 0

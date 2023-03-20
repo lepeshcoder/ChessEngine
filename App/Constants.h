@@ -10,8 +10,8 @@ namespace MoveGenConstants
 	constexpr Bitboard RANK_1 = 0XFF;
 	constexpr Bitboard RANK_2 = 0xFF00;
 	constexpr Bitboard RANK_3 = 0XFF0000;
-	constexpr Bitboard RANK_5 = 0XFF000000;
-	constexpr Bitboard RANK_4 = 0XFF00000000;
+	constexpr Bitboard RANK_4 = 0XFF000000;
+	constexpr Bitboard RANK_5 = 0XFF00000000;
 	constexpr Bitboard RANK_6 = 0XFF0000000000;
 	constexpr Bitboard RANK_7 = 0XFF000000000000;
 	constexpr Bitboard RANK_8 = 0XFF00000000000000;

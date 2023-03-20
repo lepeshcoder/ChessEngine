@@ -6,6 +6,8 @@
 #include<forward_list>
 #include<map>
 #include<iostream>
+#include<sstream>
+
 
 
 typedef unsigned long long Bitboard;
@@ -35,14 +37,27 @@ struct PosInfo {
 	PosInfo() {
 		fiftyMovesRule = 0;
 		enPassantField = Bitboard(0);
+		wShortCastle = wLongCastle = bShortCastle = bLongCastle = false;
 	}
 
 	uint_8 fiftyMovesRule;
 	Bitboard enPassantField;
+	bool wShortCastle, wLongCastle;
+	bool bShortCastle, bLongCastle;
 };
 
 struct TMove
 {
+	TMove(const TMove& other)
+	{
+		from = other.from;
+		to = other.to;
+		moveType = other.moveType;
+		opFigure = other.opFigure;
+		transformPiece = other.transformPiece;
+		sortField = other.sortField;
+		//memcpy(this, &other, sizeof(TMove));
+	}
 
 	TMove() {
 		from = to = moveType = opFigure = transformPiece =
@@ -86,7 +101,7 @@ struct Position
 	Bitboard pos[2][6]; // Position Description in Bitboards 
 	Bitboard allBlackPeaces, allWhitePeaces, allPeaces; // Bitboard includes all white / black peaces
 	Bitboard enPassantField;
-	PieceColors activeColor;
+	uint_8 activeColor;
 	bool wShortCastle, wLongCastle;
 	bool bShortCastle, bLongCastle;
 	uint_8 fiftyMovesRule;

@@ -71,6 +71,11 @@ void MoveGen::makeMove(Position& position, TMove move)
 	Game::positionInfo[position.moveCounter].enPassantField = position.enPassantField;
 	Game::positionInfo[position.moveCounter].fiftyMovesRule = position.fiftyMovesRule;
 
+	Game::positionInfo[position.moveCounter].wShortCastle = position.wShortCastle;
+	Game::positionInfo[position.moveCounter].wLongCastle = position.wLongCastle;
+	Game::positionInfo[position.moveCounter].bShortCastle = position.bShortCastle;
+	Game::positionInfo[position.moveCounter].bLongCastle = position.bLongCastle;
+
 	++position.moveCounter;
 
 	if (move.moveType == CAPTURE || move.moveType == CAPTURE_TRANSFORM || pieceType == PAWN) position.fiftyMovesRule = 0;
@@ -200,10 +205,10 @@ void MoveGen::makeMove(Position& position, TMove move)
 			position.pos[WHITE][ROOK] |= 0X10;
 			position.allWhitePeaces &= ~(0X88);
 			position.allWhitePeaces |= 0X30;
-			position.pieceHash[0].color = NO_COLOR;
-			position.pieceHash[0].color = NO_TYPE;
+			position.pieceHash[3].color = NO_COLOR;
+			position.pieceHash[3].type = NO_TYPE;
 			position.pieceHash[7].color = NO_COLOR;
-			position.pieceHash[7].color = NO_TYPE;
+			position.pieceHash[7].type = NO_TYPE;
 			position.pieceHash[5].color = WHITE;
 			position.pieceHash[5].type = KING;
 			position.pieceHash[4].color = WHITE;
@@ -217,15 +222,14 @@ void MoveGen::makeMove(Position& position, TMove move)
 			position.pos[BLACK][ROOK] |= (Bitboard(1) << 60);
 			position.allBlackPeaces &= ~0X8800000000000000;
 			position.allBlackPeaces |= 0X3000000000000000;
-			position.pieceHash[56].color = NO_COLOR;
-			position.pieceHash[56].color = NO_TYPE;
+			position.pieceHash[59].color = NO_COLOR;
+			position.pieceHash[59].type = NO_TYPE;
 			position.pieceHash[63].color = NO_COLOR;
-			position.pieceHash[63].color = NO_TYPE;
+			position.pieceHash[63].type = NO_TYPE;
 			position.pieceHash[61].color = BLACK;
 			position.pieceHash[61].type = KING;
 			position.pieceHash[60].color = BLACK;
 			position.pieceHash[60].type = ROOK;
-
 		}
 		break;
 	case SHORT_CASTLE:
@@ -238,9 +242,9 @@ void MoveGen::makeMove(Position& position, TMove move)
 			position.allWhitePeaces &= ~(0X9);
 			position.allWhitePeaces |= 0X6;
 			position.pieceHash[3].color = NO_COLOR;
-			position.pieceHash[3].color = NO_TYPE;
+			position.pieceHash[3].type = NO_TYPE;
 			position.pieceHash[0].color = NO_COLOR;
-			position.pieceHash[0].color = NO_TYPE;
+			position.pieceHash[0].type = NO_TYPE;
 			position.pieceHash[1].color = WHITE;
 			position.pieceHash[1].type = KING;
 			position.pieceHash[2].color = WHITE;
@@ -255,9 +259,9 @@ void MoveGen::makeMove(Position& position, TMove move)
 			position.allBlackPeaces &= ~0X0900000000000000;
 			position.allBlackPeaces |= 0X0600000000000000;
 			position.pieceHash[56].color = NO_COLOR;
-			position.pieceHash[56].color = NO_TYPE;
+			position.pieceHash[56].type = NO_TYPE;
 			position.pieceHash[59].color = NO_COLOR;
-			position.pieceHash[59].color = NO_TYPE;
+			position.pieceHash[59].type = NO_TYPE;
 			position.pieceHash[57].color = BLACK;
 			position.pieceHash[57].type = KING;
 			position.pieceHash[58].color = BLACK;
@@ -319,15 +323,246 @@ void MoveGen::makeMove(Position& position, TMove move)
 
 void MoveGen::unMakeMove(Position& position, TMove move)
 {
-	int pieceType = position.pieceHash[move.to].type;
+	
+	int prevPieceType = position.pieceHash[move.to].type;
 	int prevActiveColor = ((position.activeColor == WHITE) ? BLACK : WHITE);
 
 	--position.moveCounter;
 
+	position.fiftyMovesRule = Game::positionInfo[position.moveCounter].fiftyMovesRule;
+	position.enPassantField = Game::positionInfo[position.moveCounter].enPassantField;
 
+	position.wShortCastle = Game::positionInfo[position.moveCounter].wShortCastle;
+	position.wLongCastle = Game::positionInfo[position.moveCounter].wLongCastle;
+	position.bShortCastle = Game::positionInfo[position.moveCounter].bShortCastle;
+	position.bLongCastle = Game::positionInfo[position.moveCounter].bLongCastle;
 
-
-
+	
+	switch (move.moveType)
+	{
+	case DEFAULT_MOVE:
+	{
+		position.pos[prevActiveColor][prevPieceType] &= ~(Bitboard(1) << move.to);
+		position.pos[prevActiveColor][prevPieceType] |= (Bitboard(1) << move.from);
+		position.pieceHash[move.to].type = PieceTypes::NO_TYPE;
+		position.pieceHash[move.to].color = PieceColors::NO_COLOR;
+		position.pieceHash[move.from].type = prevPieceType;
+		position.pieceHash[move.from].color = prevActiveColor;
+		if (prevActiveColor == WHITE)
+		{
+			position.allWhitePeaces &= ~(Bitboard(1) << move.to);
+			position.allWhitePeaces |= (Bitboard(1) << move.from);
+		}
+		else
+		{
+			position.allBlackPeaces &= ~(Bitboard(1) << move.to);
+			position.allBlackPeaces |= (Bitboard(1) << move.from);
+		}
+		break;
+	}
+	case CAPTURE:
+	{
+		position.pos[prevActiveColor][prevPieceType] &= ~(Bitboard(1) << move.to);
+		position.pos[prevActiveColor][prevPieceType] |= (Bitboard(1) << move.from);
+		position.pieceHash[move.to].color = position.activeColor;
+		position.pieceHash[move.to].type = move.opFigure ;
+		position.pieceHash[move.from].color = prevActiveColor;
+		position.pieceHash[move.from].type = prevPieceType;
+		if (prevActiveColor == WHITE)
+		{
+			position.allWhitePeaces &= ~(Bitboard(1) << move.to);
+			position.allWhitePeaces |= (Bitboard(1) << move.from);
+			position.allBlackPeaces |= (Bitboard(1) << move.to);
+			position.pos[BLACK][move.opFigure] |= (Bitboard(1) << move.to);
+			position.material -= PieceCosts[move.opFigure];
+		}
+		else
+		{
+			position.allBlackPeaces &= ~(Bitboard(1) << move.to);
+			position.allBlackPeaces |= (Bitboard(1) << move.from);
+			position.allWhitePeaces |= (Bitboard(1) << move.to);
+			position.pos[WHITE][move.opFigure] |= (Bitboard(1) << move.to);
+			position.material += PieceCosts[move.opFigure];
+		}
+		break;
+	}
+	case FIRST_PAWN_MOVE:
+	{
+		position.pos[prevActiveColor][PAWN] &= ~(Bitboard(1) << move.to);
+		position.pos[prevActiveColor][PAWN] |= (Bitboard(1) << move.from);
+		position.pieceHash[move.to].color = NO_COLOR;
+		position.pieceHash[move.to].type = NO_TYPE;
+		position.pieceHash[move.from].color = prevActiveColor;
+		position.pieceHash[move.from].type = prevPieceType;
+		if (prevActiveColor == WHITE)
+		{
+			position.allWhitePeaces &= ~(Bitboard(1) << move.to);
+			position.allWhitePeaces |= (Bitboard(1) << move.from);
+		}
+		else
+		{
+			position.allBlackPeaces &= ~(Bitboard(1) << move.to);
+			position.allBlackPeaces |= (Bitboard(1) << move.from);
+		}
+		break;
+	}
+	case EN_PASSANT:
+	{
+		position.pos[prevActiveColor][PAWN] &= ~(Bitboard(1) << move.to);
+		position.pos[prevActiveColor][PAWN] |= (Bitboard(1) << move.from);
+		position.pieceHash[move.from].color = prevActiveColor;
+		position.pieceHash[move.from].type = PAWN;
+		position.pieceHash[move.to].color = NO_COLOR;
+		position.pieceHash[move.to].type = NO_TYPE;
+		if (prevActiveColor == WHITE)
+		{
+			position.pos[BLACK][PAWN] |= (Bitboard(1) << (move.to - 8));
+			position.allBlackPeaces |= (Bitboard(1) << (move.to - 8));
+			position.allWhitePeaces |= (Bitboard(1) << move.from);
+			position.allWhitePeaces &= ~(Bitboard(1) << move.to);
+			--position.material;
+			position.pieceHash[move.to - 8].color = BLACK;
+			position.pieceHash[move.to - 8].type = PAWN;
+		}
+		else
+		{
+			position.pos[WHITE][PAWN] |= (Bitboard(1) << (move.to + 8));
+			position.allWhitePeaces |= (Bitboard(1) << (move.to + 8));
+			position.allBlackPeaces |= (Bitboard(1) << move.from);
+			position.allBlackPeaces &= ~(Bitboard(1) << move.to);
+			++position.material;
+			position.pieceHash[move.to + 8].color = WHITE;
+			position.pieceHash[move.to + 8].type = PAWN;
+		}
+		break;
+	}
+	case SHORT_CASTLE:
+	{
+		if (prevActiveColor == WHITE)
+		{
+			position.pos[WHITE][KING] = 0X8;
+			position.pos[WHITE][ROOK] |= 0X1;
+			position.pos[WHITE][ROOK] &= ~0X4;
+			position.allWhitePeaces |= 0X9;
+			position.allWhitePeaces &= ~0X6;
+			position.pieceHash[3].color = WHITE;
+			position.pieceHash[3].type = KING;
+			position.pieceHash[0].color = WHITE;
+			position.pieceHash[0].type = ROOK;
+			position.pieceHash[1].color = NO_COLOR;
+			position.pieceHash[1].type = NO_TYPE;
+			position.pieceHash[2].color = NO_COLOR;
+			position.pieceHash[2].type = NO_TYPE;
+		}
+		else
+		{
+			position.pos[BLACK][KING] = Bitboard(1) << 59;
+			position.pos[BLACK][ROOK] |= (0X0100000000000000);
+			position.pos[BLACK][ROOK] &= ~0X0400000000000000;
+			position.allBlackPeaces |= 0X0900000000000000;
+			position.allBlackPeaces &= ~0X0600000000000000;
+			position.pieceHash[56].color = BLACK;
+			position.pieceHash[56].type = ROOK;
+			position.pieceHash[59].color = BLACK;
+			position.pieceHash[59].type = KING;
+			position.pieceHash[57].color = NO_COLOR;
+			position.pieceHash[57].type = NO_TYPE;
+			position.pieceHash[58].color = NO_COLOR;
+			position.pieceHash[58].type = NO_TYPE;
+		}
+		break;
+	}
+	case LONG_CASTLE:
+	{
+		if (prevActiveColor == WHITE)
+		{
+			position.pos[WHITE][KING] = 0X8;
+			position.pos[WHITE][ROOK] |= (0X80);
+			position.pos[WHITE][ROOK] &= ~0X10;
+			position.allWhitePeaces |= (0X88);
+			position.allWhitePeaces &= ~0X30;
+			position.pieceHash[3].color = WHITE;
+			position.pieceHash[3].type = KING;
+			position.pieceHash[7].color = WHITE;
+			position.pieceHash[7].type = ROOK;
+			position.pieceHash[5].color = NO_COLOR;
+			position.pieceHash[5].type = NO_TYPE;
+			position.pieceHash[4].color = NO_COLOR;
+			position.pieceHash[4].type = NO_TYPE;
+		}
+		else
+		{
+			position.pos[BLACK][KING] = Bitboard(1) << 59;
+			position.pos[BLACK][ROOK] |= (Bitboard(1) << 63);
+			position.pos[BLACK][ROOK] &= ~(Bitboard(1) << 60);
+			position.allBlackPeaces |= 0X8800000000000000;
+			position.allBlackPeaces &= ~0X3000000000000000;
+			position.pieceHash[59].color = BLACK;
+			position.pieceHash[59].type = KING;
+			position.pieceHash[63].color = BLACK;
+			position.pieceHash[63].type = ROOK;
+			position.pieceHash[61].color = NO_COLOR;
+			position.pieceHash[61].type = NO_TYPE;
+			position.pieceHash[60].color = NO_COLOR;
+			position.pieceHash[60].type = NO_TYPE;
+		}
+		break;
+	}
+	case TRANSFORM:
+	{
+		position.pieceHash[move.to].color = NO_COLOR;
+		position.pieceHash[move.to].type = NO_TYPE;
+		position.pieceHash[move.from].color = prevActiveColor;
+		position.pieceHash[move.from].type = PAWN;
+		if (prevActiveColor == WHITE)
+		{
+			position.pos[WHITE][PAWN] |= (Bitboard(1) << move.from);
+			position.pos[WHITE][move.transformPiece] &= ~(Bitboard(1) << move.to);
+			position.allWhitePeaces &= ~(Bitboard(1) << move.to);
+			position.allWhitePeaces |= (Bitboard(1) << move.from);
+			position.material -= PieceCosts[move.transformPiece] - 1;
+		}
+		else
+		{
+			position.pos[BLACK][PAWN] |= (Bitboard(1) << move.from);
+			position.pos[BLACK][move.transformPiece] &= ~(Bitboard(1) << move.to);
+			position.allBlackPeaces &= ~(Bitboard(1) << move.to);
+			position.allBlackPeaces |= (Bitboard(1) << move.from);
+			position.material += PieceCosts[move.transformPiece] - 1;
+		}
+		break;
+	}
+	case CAPTURE_TRANSFORM:
+	{
+		position.pieceHash[move.from].color = prevActiveColor;
+		position.pieceHash[move.from].type = PAWN;
+		position.pieceHash[move.to].color = position.activeColor;
+		position.pieceHash[move.to].type = move.opFigure;
+		if (prevActiveColor == WHITE)
+		{
+			position.pos[BLACK][move.opFigure] |= (Bitboard(1) << move.to);
+			position.allBlackPeaces |= (Bitboard(1) << move.to);
+			position.pos[WHITE][PAWN] |= (Bitboard(1) << move.from);
+			position.pos[WHITE][move.transformPiece] &= ~(Bitboard(1) << move.to);
+			position.allWhitePeaces |= (Bitboard(1) << move.from);
+			position.allWhitePeaces &= ~(Bitboard(1) << move.to);
+			position.material -= PieceCosts[move.transformPiece] - 1 + PieceCosts[move.opFigure];
+		}
+		else
+		{
+			position.pos[WHITE][move.opFigure] |= (Bitboard(1) << move.to);
+			position.allWhitePeaces |= (Bitboard(1) << move.to);
+			position.pos[BLACK][PAWN] |= (Bitboard(1) << move.from);
+			position.pos[BLACK][move.transformPiece] &= ~(Bitboard(1) << move.to);
+			position.allBlackPeaces |= (Bitboard(1) << move.from);
+			position.allBlackPeaces &= ~(Bitboard(1) << move.to);
+			position.material += PieceCosts[move.transformPiece] - 1 + PieceCosts[move.opFigure];
+		}
+		break;
+	}
+	}
+	position.allPeaces = position.allBlackPeaces | position.allWhitePeaces;
+	position.activeColor = prevActiveColor; 
 }
 
 TMove* MoveGen::generateAndSortAllCaptures(Position& position)
@@ -633,8 +868,7 @@ TMove* MoveGen::generateAndSortAllCaptures(Position& position)
 		}
 	}
 
-	Captures[captureIndex].transformPiece = PAWN;
-
+	
 	// sort by sortField MVV/LVA
 	for (int i = 1; i < captureIndex; i++) {
 		for (int j = i; j > 0 && Captures[j - 1].sortField < Captures[j].sortField; j--) {
@@ -644,10 +878,12 @@ TMove* MoveGen::generateAndSortAllCaptures(Position& position)
 		}
 	}
 
+	Captures[captureIndex].transformPiece = PAWN;
+
 	return Captures;
 }
 
-TMove* MoveGen::generateAndSortAllMoves(Position& position)
+TMove* MoveGen::generateAndSortAllQuietMoves(Position& position)
 {
 	TMove* moves = new TMove[150];
 	int movesIndex = 0;
@@ -925,6 +1161,29 @@ TMove* MoveGen::generateAndSortAllMoves(Position& position)
 	return moves;
 }
 
+TMove* MoveGen::generateAndSortAllMoves(Position& position)
+{
+	TMove* captures = generateAndSortAllCaptures(position);
+	TMove* moves = generateAndSortAllQuietMoves(position);
+	TMove* allMoves = new TMove[1000];
+	int i = 0;
+	int j = 0;
+	while (captures[i].transformPiece != PAWN)
+	{
+		std::memcpy(&allMoves[i], &captures[i], sizeof(TMove));
+		++i;
+	}
+	while (moves[j].transformPiece != PAWN)
+	{
+		std::memcpy(&allMoves[i], &moves[j], sizeof(TMove));
+		++i; ++j;
+	}
+	allMoves[i].transformPiece = PAWN;
+	delete[] captures;
+	delete[] moves;
+	return allMoves;
+}
+
 void MoveGen::viewBitboard(const Bitboard& bb, const std::string& filePath)
 {
 	std::string result = "";
@@ -947,6 +1206,20 @@ void MoveGen::viewBitboard(const Bitboard& bb, const std::string& filePath)
 		f << result + "\n\n";
 		f.close();
 	}
+}
+
+std::string MoveGen::bbToString(Bitboard& bb)
+{
+	std::string str;
+	Bitboard mask = 0x8000000000000000;
+	for (int i = 0; i < 64; i++)
+	{
+		(bb & mask) ? str += "1 " : str += "0 ";
+		mask >>= 1;
+		if (!((i + 1) & 7)) str += '\n';
+	}
+	str.erase(str.end() - 1);
+	return str;
 }
 
 int MoveGen::bitScanReverse(Bitboard bb)
@@ -1346,7 +1619,7 @@ void MoveGen::showMoveList(TMove* list)
 	int i = 0;
 	while (list[i].transformPiece != PAWN)
 	{
-		std::string pieces[6]{ "KING","QUEEN","ROOK","BISHOP","KNIGHT","PAWN" };
+		std::string pieces[7]{ "KING","QUEEN","ROOK","BISHOP","KNIGHT","PAWN","NO_TYPE"};
 		std::string moveTypes[8]{ "DEFAULT_MOVE", "CAPTURE", "FIRST_PAWN_MOVE", "EN_PASSANT", "LONG_CASTLE",
 			"SHORT_CASTLE", "TRANSFORM", "CAPTURE_TRANSFORM" };
 		char files[8]{ 'A','B','C','D','E','F','G','H' };
@@ -1355,7 +1628,7 @@ void MoveGen::showMoveList(TMove* list)
 		std::cout << "MoveType: " << moveTypes[list[i].moveType] << "\n";
 		if (list[i].moveType == CAPTURE || list[i].moveType == CAPTURE_TRANSFORM)
 			std::cout << "Eaten Piece: " << pieces[list[i].opFigure] << "\n";
-		if (list[i].moveType == CAPTURE_TRANSFORM)
+		if (list[i].moveType == CAPTURE_TRANSFORM || list[i].moveType == TRANSFORM)
 			std::cout << "Transform into: " << pieces[list[i].transformPiece] << "\n";
 		std::cout << "Sort Field: " << int(list[i].sortField) << "\n\n\n";
 		++i;

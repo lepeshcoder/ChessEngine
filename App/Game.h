@@ -18,6 +18,8 @@ namespace Game {
 
 	std::string getPositionFen(Position& pos);
 
+	std::string getFullPositionInfo(Position& pos);
+
 
 
 

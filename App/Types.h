@@ -32,23 +32,16 @@ enum PieceColors { WHITE = 0, BLACK, NO_COLOR };
 
 constexpr int PieceCosts[6]{ 1000,9,5,3,3,1 };
 
-
-struct PosInfo {
-	PosInfo() {
-		fiftyMovesRule = 0;
-		enPassantField = Bitboard(0);
-		wShortCastle = wLongCastle = bShortCastle = bLongCastle = false;
-	}
-
-	uint_8 fiftyMovesRule;
-	Bitboard enPassantField;
-	bool wShortCastle, wLongCastle;
-	bool bShortCastle, bLongCastle;
-};
-
 struct TMove
 {
-	TMove(const TMove& other)
+	
+
+	TMove() {
+		from = to = moveType = opFigure = transformPiece =
+			sortField = 0;
+	}
+
+	TMove operator=(TMove other)
 	{
 		from = other.from;
 		to = other.to;
@@ -56,12 +49,7 @@ struct TMove
 		opFigure = other.opFigure;
 		transformPiece = other.transformPiece;
 		sortField = other.sortField;
-		//memcpy(this, &other, sizeof(TMove));
-	}
-
-	TMove() {
-		from = to = moveType = opFigure = transformPiece =
-			sortField = 0;
+		return *this; // возвращает объект, который сгенерировал вызов
 	}
 
 	uint_8 from, to;
@@ -72,6 +60,21 @@ struct TMove
 	uint_8 transformPiece;
 	int_8 sortField;
 };
+
+struct PosInfo {
+	PosInfo() {
+		fiftyMovesRule = 0;
+		enPassantField = Bitboard(0);
+		wShortCastle = wLongCastle = bShortCastle = bLongCastle = false;
+	}
+	uint_8 fiftyMovesRule;
+	Bitboard enPassantField;
+	bool wShortCastle, wLongCastle;
+	bool bShortCastle, bLongCastle;
+	TMove prevMove;
+};
+
+
 
 
 struct Piece
@@ -90,6 +93,13 @@ struct Position
 {
 	
 	Position() {
+		for (int i = 0; i < 2; i++)
+		{
+			for (int j = 0; j < 6; j++)
+			{
+				pos[i][j] = Bitboard(0);
+			}
+		}
 		allBlackPeaces = allPeaces = allWhitePeaces = enPassantField = Bitboard(0);
 		activeColor = NO_COLOR;
 		wShortCastle = wLongCastle = bShortCastle = bLongCastle = false;
@@ -107,6 +117,7 @@ struct Position
 	uint_8 fiftyMovesRule;
 	uint_8 moveCounter;
 	int_8 material; // position evaluation score (Including only figures) 
+	TMove prevMove;
 };
 
 

@@ -12,5 +12,7 @@ using namespace SearchTypes;
 namespace Search {
 	int NegaScout(Position& pos, int alpha, int beta, int depth);
 
+	extern TMove moveLine[7];
+
 };
 #endif // !SEARCH

@@ -71,8 +71,6 @@ void Game::initPosition(Position& pos, std::string fenstring)
 		pos.allWhitePeaces |= pos.pos[WHITE][i];
 	}
 	pos.allPeaces = pos.allBlackPeaces | pos.allWhitePeaces;
-	pos.material = 0;
-
 
 	for (int color = PieceColors::WHITE; color <= PieceColors::BLACK; color++)
 	{
@@ -86,9 +84,12 @@ void Game::initPosition(Position& pos, std::string fenstring)
 				pos.pieceHash[sq].color = color;
 				pos.pieceHash[sq].type = pieceType;
 				pieces &= (pieces - 1);
+				if (color == WHITE) pos.material += PieceCosts[pieceType];
+				else pos.material -= PieceCosts[pieceType];
 			}
 		}
 	}
+
 
 }
 
@@ -149,6 +150,7 @@ std::string Game::getFullPositionInfo(Position& pos)
 {
 	std::string colors[3]{ "WHITE","BLACK","NO_COLOR"};
 	std::string pieces[7]{ "KING","QUEEN","ROOK","BISHOP","KNIGHT","PAWN","NO_TYPE" };
+	std::string moveTypes[8]{ "DEFAULT_MOVE", "CAPTURE", "FIRST_PAWN_MOVE", "EN_PASSANT", "LONG_CASTLE", "SHORT_CASTLE", "TRANSFORM", "CAPTURE_TRANSFORM" };
 	char files[8]{ 'A','B','C','D','E','F','G','H' };
 	std::string info;
 	info += "ActiveColor: ";
@@ -186,7 +188,7 @@ std::string Game::getFullPositionInfo(Position& pos)
 
 	info += "EnPassantField: ";
 	int sq = MoveGen::bitScanForward(pos.enPassantField);
-	if (sq != 0)
+	if (sq != -1)
 	{
 		info += files[7 - sq % 8];
 		info += std::to_string(sq / 8 + 1);
@@ -237,5 +239,26 @@ std::string Game::getFullPositionInfo(Position& pos)
 		}
 		info += "\n";
 	}
+	info += "\nPrevMove:\n";
+	info += "from: ";
+	info += files[7 - pos.prevMove.from % 8];
+	info += std::to_string(pos.prevMove.from / 8 + 1);
+	info += "\n";
+	info += "to: ";
+	info += files[7 - pos.prevMove.to % 8];
+	info += std::to_string(pos.prevMove.to / 8 + 1);
+	info += "\n";
+	info += "MoveType: ";
+	info += moveTypes[pos.prevMove.moveType];
+	info += "\n";
+	info += "OpFigure: ";
+	info += pieces[pos.prevMove.opFigure];
+	info += "\n";
+	info += "TransformPiece: ";
+	info += pieces[pos.prevMove.transformPiece];
+	info += "\n";
+	info += "Sort Field: ";
+	info += std::to_string(pos.prevMove.sortField);
+
 	return info;
 }

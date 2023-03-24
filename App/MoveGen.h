@@ -134,6 +134,7 @@ namespace MoveGen{
 
 	bool isCastlingPossible(Position& pos, int CastleType);
 
+
 };
 
 

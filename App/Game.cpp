@@ -61,9 +61,19 @@ void Game::initPosition(Position& pos, std::string fenstring)
 	}
 	else pos.enPassantField = 0;
 	i += 2;
-	pos.fiftyMovesRule = fenstring[i] - '0';
-	i += 2;
-	pos.moveCounter = fenstring[i] - '0';
+	std::string fmr;
+	while (fenstring[i] != ' ')
+	{
+		fmr += fenstring[i++];
+	}
+	pos.fiftyMovesRule = std::atoi(fmr.c_str());
+	i++;
+	std::string moveCounter;
+	while (i < fenstring.size())
+	{
+		moveCounter += fenstring[i++];
+	}
+	pos.moveCounter = std::atoi(moveCounter.c_str());
 	pos.allBlackPeaces = pos.allWhitePeaces = 0;
 	for (int i = 0; i < 6; i++)
 	{
@@ -88,6 +98,19 @@ void Game::initPosition(Position& pos, std::string fenstring)
 				else pos.material -= PieceCosts[pieceType];
 			}
 		}
+	}
+
+	for (int i = 0; i < 64; i++)
+	{
+		int color = NO_COLOR;
+		int type = NO_TYPE;
+		if (pos.pieceHash[i].color != NO_COLOR)
+		{
+			color = pos.pieceHash[i].color;
+			type = pos.pieceHash[i].type;
+			pos.zobristHash ^= MoveGen::zobristCache[color][type][i];
+		}
+		
 	}
 
 
@@ -168,6 +191,10 @@ std::string Game::getFullPositionInfo(Position& pos)
 	info += "material:";
 	info += std::to_string(pos.material);
 	info += '\n';
+
+	info += "zobristHash: ";
+	info += std::to_string(pos.zobristHash);
+	info += "\n";
 
 
 	info += "BlackShortCastle: ";

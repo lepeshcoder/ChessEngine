@@ -6,33 +6,39 @@ std::string kal;
 
 TMove Search::moveLine[7] = {};
 
+int bShortCastle = 0;
+int bLongCastle = 0;
+int wShortCastle = 0;
+int wLongCastle = 0;
+
 int Search::NegaScout(Position& pos, int alpha, int beta, int depth)
 {
 	if (depth == 6)
 	{
 		kal = Game::getFullPositionInfo(pos);
 	}
-	int score = -2000, tmp, i = 0;
+	int score = -2000, tmp, i = 0,size = 0;
 	if (depth <= 0) return pos.material;
-	TMove* allMoves = MoveGen::generateAndSortAllMoves(pos);
-	while (allMoves[i].transformPiece != PAWN && alpha < beta)
+	TMove* allMoves = MoveGen::generateAndSortAllMoves(pos,size);
+	while (i < size && alpha < beta)
 	{		
 		/*if (pos.activeColor == WHITE && allMoves[i].opFigure == KING && allMoves[i].moveType == CAPTURE) return 1000;
-		else if(pos.activeColor == BLACK && allMoves[i].opFigure == KING && allMoves[i].moveType == CAPTURE) return -1000;
-		*/MoveGen::makeMove(pos, allMoves[i]);
+		else if(pos.activeColor == BLACK && allMoves[i].opFigure == KING && allMoves[i].moveType == CAPTURE) return -1000;*/
+		
+		MoveGen::makeMove(pos, allMoves[i]);
+		
 		//moveLine[6 - depth] = allMoves[i];
-		tmp = -NegaScout(pos,-(alpha + 1), -alpha, depth - 1);
+		tmp = -NegaScout(pos, -(alpha + 1), -alpha, depth - 1);
 		if (tmp > alpha && tmp < beta)
 		{
 			tmp = -NegaScout(pos, -beta, -tmp, depth - 1);
 		} 
 		MoveGen::unMakeMove(pos, allMoves[i]);	
+		
 		if (strcmp(kal.c_str(), Game::getFullPositionInfo(pos).c_str()) != 0 && depth == 6)
 		{
 			std::cout << "wrong!!!\n";
-			moveLine[5].transformPiece = PAWN;
 			std::cout << "old pos: \n\n" << kal << "\n\nnew pos: \n\n" << Game::getFullPositionInfo(pos);
-			MoveGen::showMoveList(moveLine);
 			return 0;
 		}
 		if (tmp > score) score = tmp;

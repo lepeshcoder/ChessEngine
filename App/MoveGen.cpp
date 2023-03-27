@@ -25,10 +25,14 @@ Bitboard bPawnCache[64];
 Bitboard wPawnMoveCache[64];
 Bitboard bPawnMoveCache[64];
 
+uint_64 MoveGen::zobristCache[2][6][64] = {};
+
 
 
 void MoveGen::InitMoveGen()
 {
+	initZobristCache();
+
 	initRays();
 
 	initRookMasks();
@@ -119,12 +123,16 @@ void MoveGen::makeMove(Position& position, TMove move)
 			position.allWhitePeaces &= ~(Bitboard(1) << move.from);
 			position.allWhitePeaces |= (Bitboard(1) << move.to);
 			if (pieceType == KING) position.wShortCastle = position.wLongCastle = false;
+			position.zobristHash ^= zobristCache[WHITE][pieceType][move.from];
+			position.zobristHash ^= zobristCache[WHITE][pieceType][move.to];
 		}
 		else
 		{
 			position.allBlackPeaces &= ~(Bitboard(1) << move.from);
 			position.allBlackPeaces |= (Bitboard(1) << move.to);
 			if (pieceType == KING) position.bShortCastle = position.bLongCastle = false;
+			position.zobristHash ^= zobristCache[BLACK][pieceType][move.from];
+			position.zobristHash ^= zobristCache[BLACK][pieceType][move.to];
 		}
 		break;
 	}
@@ -138,21 +146,32 @@ void MoveGen::makeMove(Position& position, TMove move)
 		position.pieceHash[move.to].type = pieceType;
 		if (activeColor == WHITE)
 		{
+			position.zobristHash ^= zobristCache[WHITE][pieceType][move.from];
+			position.zobristHash ^= zobristCache[WHITE][pieceType][move.to];
+			position.zobristHash ^= zobristCache[BLACK][move.opFigure][move.to];
 			position.allWhitePeaces &= ~(Bitboard(1) << move.from);
 			position.allWhitePeaces |= (Bitboard(1) << move.to);
 			position.allBlackPeaces &= ~(Bitboard(1) << move.to);
 			position.pos[BLACK][move.opFigure] &= ~(Bitboard(1) << move.to);
 			position.material += PieceCosts[move.opFigure];
 			if (pieceType == KING) position.wShortCastle = position.wLongCastle = false;
+			if (position.bShortCastle && move.opFigure == ROOK && move.to == 56) position.bShortCastle = false;
+			if (position.bLongCastle && move.opFigure == ROOK && move.to == 63) position.bLongCastle = false;
 		}
 		else
 		{
+			position.zobristHash ^= zobristCache[BLACK][pieceType][move.from];
+			position.zobristHash ^= zobristCache[BLACK][pieceType][move.to];
+			position.zobristHash ^= zobristCache[WHITE][move.opFigure][move.to];
 			position.allBlackPeaces &= ~(Bitboard(1) << move.from);
 			position.allBlackPeaces |= (Bitboard(1) << move.to);
 			position.allWhitePeaces &= ~(Bitboard(1) << move.to);
 			position.pos[WHITE][move.opFigure] &= ~(Bitboard(1) << move.to);
 			position.material -= PieceCosts[move.opFigure];
 			if (pieceType == KING) position.bShortCastle = position.bLongCastle = false;
+			if (position.wShortCastle && move.opFigure == ROOK && move.to == 0) position.wShortCastle = false;
+			if (position.wLongCastle && move.opFigure == ROOK && move.to == 7) position.wLongCastle = false;
+			
 		}
 		break;
 	}
@@ -164,6 +183,8 @@ void MoveGen::makeMove(Position& position, TMove move)
 		position.pieceHash[move.from].type = NO_TYPE;
 		position.pieceHash[move.to].color = activeColor;
 		position.pieceHash[move.to].type = pieceType;
+		position.zobristHash ^= zobristCache[activeColor][PAWN][move.from];
+		position.zobristHash ^= zobristCache[activeColor][PAWN][move.to];
 		if (activeColor == WHITE)
 		{
 			position.enPassantField = (Bitboard(1) << (move.to - 8));
@@ -188,6 +209,9 @@ void MoveGen::makeMove(Position& position, TMove move)
 		position.pieceHash[move.to].type = pieceType;
 		if (activeColor == WHITE)
 		{
+			position.zobristHash ^= zobristCache[WHITE][PAWN][move.from];
+			position.zobristHash ^= zobristCache[WHITE][PAWN][move.to];
+			position.zobristHash ^= zobristCache[BLACK][PAWN][move.to - 8];
 			position.pos[BLACK][PAWN] &= ~(Bitboard(1) << (move.to - 8));
 			position.allBlackPeaces &= ~(Bitboard(1) << (move.to - 8));
 			position.allWhitePeaces &= ~(Bitboard(1) << move.from);
@@ -198,6 +222,9 @@ void MoveGen::makeMove(Position& position, TMove move)
 		}
 		else
 		{
+			position.zobristHash ^= zobristCache[BLACK][PAWN][move.from];
+			position.zobristHash ^= zobristCache[BLACK][PAWN][move.to];
+			position.zobristHash ^= zobristCache[WHITE][PAWN][move.to + 8];
 			position.pos[WHITE][PAWN] &= ~(Bitboard(1) << (move.to + 8));
 			position.allWhitePeaces &= ~(Bitboard(1) << (move.to + 8));
 			position.allBlackPeaces &= ~(Bitboard(1) << move.from);
@@ -226,6 +253,10 @@ void MoveGen::makeMove(Position& position, TMove move)
 			position.pieceHash[5].type = KING;
 			position.pieceHash[4].color = WHITE;
 			position.pieceHash[4].type = ROOK;
+			position.zobristHash ^= zobristCache[WHITE][KING][3];
+			position.zobristHash ^= zobristCache[WHITE][KING][5];
+			position.zobristHash ^= zobristCache[WHITE][ROOK][7];
+			position.zobristHash ^= zobristCache[WHITE][ROOK][4];
 		}
 		else
 		{
@@ -243,6 +274,10 @@ void MoveGen::makeMove(Position& position, TMove move)
 			position.pieceHash[61].type = KING;
 			position.pieceHash[60].color = BLACK;
 			position.pieceHash[60].type = ROOK;
+			position.zobristHash ^= zobristCache[BLACK][KING][59];
+			position.zobristHash ^= zobristCache[BLACK][KING][61];
+			position.zobristHash ^= zobristCache[BLACK][ROOK][63];
+			position.zobristHash ^= zobristCache[BLACK][ROOK][60];
 		}
 		break;
 	}
@@ -264,6 +299,10 @@ void MoveGen::makeMove(Position& position, TMove move)
 			position.pieceHash[1].type = KING;
 			position.pieceHash[2].color = WHITE;
 			position.pieceHash[2].type = ROOK;
+			position.zobristHash ^= zobristCache[WHITE][KING][3];
+			position.zobristHash ^= zobristCache[WHITE][KING][1];
+			position.zobristHash ^= zobristCache[WHITE][ROOK][0];
+			position.zobristHash ^= zobristCache[WHITE][ROOK][2];
 		}
 		else
 		{
@@ -281,6 +320,10 @@ void MoveGen::makeMove(Position& position, TMove move)
 			position.pieceHash[57].type = KING;
 			position.pieceHash[58].color = BLACK;
 			position.pieceHash[58].type = ROOK;
+			position.zobristHash ^= zobristCache[BLACK][KING][59];
+			position.zobristHash ^= zobristCache[BLACK][KING][57];
+			position.zobristHash ^= zobristCache[BLACK][ROOK][56];
+			position.zobristHash ^= zobristCache[BLACK][ROOK][58];
 		}
 		break;
 	}
@@ -289,7 +332,9 @@ void MoveGen::makeMove(Position& position, TMove move)
 		position.pieceHash[move.from].color = NO_COLOR;
 		position.pieceHash[move.from].type = NO_TYPE;
 		position.pieceHash[move.to].color = activeColor;
-		position.pieceHash[move.from].type = move.transformPiece;
+		position.pieceHash[move.to].type = move.transformPiece; 
+		position.zobristHash ^= zobristCache[activeColor][PAWN][move.from];
+		position.zobristHash ^= zobristCache[activeColor][move.transformPiece][move.to];
 		if (activeColor == WHITE)
 		{
 			position.pos[WHITE][PAWN] &= ~(Bitboard(1) << move.from);
@@ -313,7 +358,9 @@ void MoveGen::makeMove(Position& position, TMove move)
 		position.pieceHash[move.from].color = NO_COLOR;
 		position.pieceHash[move.from].type = NO_TYPE;
 		position.pieceHash[move.to].color = activeColor;
-		position.pieceHash[move.from].type = move.transformPiece;
+		position.pieceHash[move.to].type = move.transformPiece;
+		position.zobristHash ^= zobristCache[activeColor][PAWN][move.from];
+		position.zobristHash ^= zobristCache[activeColor][move.transformPiece][move.to];
 		if (activeColor == WHITE)
 		{
 			position.pos[BLACK][move.opFigure] &= ~(Bitboard(1) << move.to);
@@ -323,6 +370,9 @@ void MoveGen::makeMove(Position& position, TMove move)
 			position.allWhitePeaces &= ~(Bitboard(1) << move.from);
 			position.allWhitePeaces |= (Bitboard(1) << move.to);
 			position.material += PieceCosts[move.transformPiece] - 1 + PieceCosts[move.opFigure];
+			position.zobristHash ^= zobristCache[BLACK][move.opFigure][move.to];
+			if (position.bShortCastle && move.opFigure == ROOK && move.to == 56) position.bShortCastle = false;
+			if (position.bLongCastle && move.opFigure == ROOK && move.to == 63) position.bLongCastle = false;
 		}
 		else
 		{
@@ -333,6 +383,9 @@ void MoveGen::makeMove(Position& position, TMove move)
 			position.allBlackPeaces &= ~(Bitboard(1) << move.from);
 			position.allBlackPeaces |= (Bitboard(1) << move.to);
 			position.material -= PieceCosts[move.transformPiece] - 1 + PieceCosts[move.opFigure];
+			position.zobristHash ^= zobristCache[WHITE][move.opFigure][move.to];
+			if (position.wShortCastle && move.opFigure == ROOK && move.to == 0) position.wShortCastle = false;
+			if (position.wLongCastle && move.opFigure == ROOK && move.to == 7) position.wLongCastle = false;
 		}
 		break;
 	}
@@ -370,6 +423,8 @@ void MoveGen::unMakeMove(Position& position, TMove move)
 		position.pieceHash[move.to].color = PieceColors::NO_COLOR;
 		position.pieceHash[move.from].type = prevPieceType;
 		position.pieceHash[move.from].color = prevActiveColor;
+		position.zobristHash ^= zobristCache[prevActiveColor][prevPieceType][move.to];
+		position.zobristHash ^= zobristCache[prevActiveColor][prevPieceType][move.from];
 		if (prevActiveColor == WHITE)
 		{
 			position.allWhitePeaces &= ~(Bitboard(1) << move.to);
@@ -397,6 +452,9 @@ void MoveGen::unMakeMove(Position& position, TMove move)
 			position.allBlackPeaces |= (Bitboard(1) << move.to);
 			position.pos[BLACK][move.opFigure] |= (Bitboard(1) << move.to);
 			position.material -= PieceCosts[move.opFigure];
+			position.zobristHash ^= zobristCache[WHITE][prevPieceType][move.from];
+			position.zobristHash ^= zobristCache[WHITE][prevPieceType][move.to];
+			position.zobristHash ^= zobristCache[BLACK][move.opFigure][move.to];
 		}
 		else
 		{
@@ -405,6 +463,9 @@ void MoveGen::unMakeMove(Position& position, TMove move)
 			position.allWhitePeaces |= (Bitboard(1) << move.to);
 			position.pos[WHITE][move.opFigure] |= (Bitboard(1) << move.to);
 			position.material += PieceCosts[move.opFigure];
+			position.zobristHash ^= zobristCache[BLACK][prevPieceType][move.from];
+			position.zobristHash ^= zobristCache[BLACK][prevPieceType][move.to];
+			position.zobristHash ^= zobristCache[WHITE][move.opFigure][move.to];
 		}
 		break;
 	}
@@ -416,6 +477,8 @@ void MoveGen::unMakeMove(Position& position, TMove move)
 		position.pieceHash[move.to].type = NO_TYPE;
 		position.pieceHash[move.from].color = prevActiveColor;
 		position.pieceHash[move.from].type = prevPieceType;
+		position.zobristHash ^= zobristCache[prevActiveColor][PAWN][move.from];
+		position.zobristHash ^= zobristCache[prevActiveColor][PAWN][move.to];
 		if (prevActiveColor == WHITE)
 		{
 			position.allWhitePeaces &= ~(Bitboard(1) << move.to);
@@ -436,6 +499,8 @@ void MoveGen::unMakeMove(Position& position, TMove move)
 		position.pieceHash[move.from].type = PAWN;
 		position.pieceHash[move.to].color = NO_COLOR;
 		position.pieceHash[move.to].type = NO_TYPE;
+		position.zobristHash ^= zobristCache[prevActiveColor][PAWN][move.from];
+		position.zobristHash ^= zobristCache[prevActiveColor][PAWN][move.to];
 		if (prevActiveColor == WHITE)
 		{
 			position.pos[BLACK][PAWN] |= (Bitboard(1) << (move.to - 8));
@@ -445,6 +510,7 @@ void MoveGen::unMakeMove(Position& position, TMove move)
 			--position.material;
 			position.pieceHash[move.to - 8].color = BLACK;
 			position.pieceHash[move.to - 8].type = PAWN;
+			position.zobristHash ^= zobristCache[BLACK][PAWN][move.to - 8];
 		}
 		else
 		{
@@ -455,6 +521,7 @@ void MoveGen::unMakeMove(Position& position, TMove move)
 			++position.material;
 			position.pieceHash[move.to + 8].color = WHITE;
 			position.pieceHash[move.to + 8].type = PAWN;
+			position.zobristHash ^= zobristCache[WHITE][PAWN][move.to + 8];
 		}
 		break;
 	}
@@ -475,6 +542,10 @@ void MoveGen::unMakeMove(Position& position, TMove move)
 			position.pieceHash[1].type = NO_TYPE;
 			position.pieceHash[2].color = NO_COLOR;
 			position.pieceHash[2].type = NO_TYPE;
+			position.zobristHash ^= zobristCache[WHITE][KING][3];
+			position.zobristHash ^= zobristCache[WHITE][KING][1];
+			position.zobristHash ^= zobristCache[WHITE][ROOK][0];
+			position.zobristHash ^= zobristCache[WHITE][ROOK][2];
 		}
 		else
 		{
@@ -491,6 +562,10 @@ void MoveGen::unMakeMove(Position& position, TMove move)
 			position.pieceHash[57].type = NO_TYPE;
 			position.pieceHash[58].color = NO_COLOR;
 			position.pieceHash[58].type = NO_TYPE;
+			position.zobristHash ^= zobristCache[BLACK][KING][59];
+			position.zobristHash ^= zobristCache[BLACK][KING][57];
+			position.zobristHash ^= zobristCache[BLACK][ROOK][56];
+			position.zobristHash ^= zobristCache[BLACK][ROOK][58];
 		}
 		break;
 	}
@@ -511,6 +586,10 @@ void MoveGen::unMakeMove(Position& position, TMove move)
 			position.pieceHash[5].type = NO_TYPE;
 			position.pieceHash[4].color = NO_COLOR;
 			position.pieceHash[4].type = NO_TYPE;
+			position.zobristHash ^= zobristCache[WHITE][KING][3];
+			position.zobristHash ^= zobristCache[WHITE][KING][5];
+			position.zobristHash ^= zobristCache[WHITE][ROOK][7];
+			position.zobristHash ^= zobristCache[WHITE][ROOK][4];
 		}
 		else
 		{
@@ -527,6 +606,10 @@ void MoveGen::unMakeMove(Position& position, TMove move)
 			position.pieceHash[61].type = NO_TYPE;
 			position.pieceHash[60].color = NO_COLOR;
 			position.pieceHash[60].type = NO_TYPE;
+			position.zobristHash ^= zobristCache[BLACK][KING][59];
+			position.zobristHash ^= zobristCache[BLACK][KING][61];
+			position.zobristHash ^= zobristCache[BLACK][ROOK][63];
+			position.zobristHash ^= zobristCache[BLACK][ROOK][60];
 		}
 		break;
 	}
@@ -536,6 +619,8 @@ void MoveGen::unMakeMove(Position& position, TMove move)
 		position.pieceHash[move.to].type = NO_TYPE;
 		position.pieceHash[move.from].color = prevActiveColor;
 		position.pieceHash[move.from].type = PAWN;
+		position.zobristHash ^= zobristCache[prevActiveColor][PAWN][move.from];
+		position.zobristHash ^= zobristCache[prevActiveColor][move.transformPiece][move.to];
 		if (prevActiveColor == WHITE)
 		{
 			position.pos[WHITE][PAWN] |= (Bitboard(1) << move.from);
@@ -560,6 +645,8 @@ void MoveGen::unMakeMove(Position& position, TMove move)
 		position.pieceHash[move.from].type = PAWN;
 		position.pieceHash[move.to].color = position.activeColor;
 		position.pieceHash[move.to].type = move.opFigure;
+		position.zobristHash ^= zobristCache[prevActiveColor][PAWN][move.from];
+		position.zobristHash ^= zobristCache[prevActiveColor][move.transformPiece][move.to];
 		if (prevActiveColor == WHITE)
 		{
 			position.pos[BLACK][move.opFigure] |= (Bitboard(1) << move.to);
@@ -569,6 +656,7 @@ void MoveGen::unMakeMove(Position& position, TMove move)
 			position.allWhitePeaces |= (Bitboard(1) << move.from);
 			position.allWhitePeaces &= ~(Bitboard(1) << move.to);
 			position.material -= PieceCosts[move.transformPiece] - 1 + PieceCosts[move.opFigure];
+			position.zobristHash ^= zobristCache[BLACK][move.opFigure][move.to];
 		}
 		else
 		{
@@ -579,6 +667,7 @@ void MoveGen::unMakeMove(Position& position, TMove move)
 			position.allBlackPeaces |= (Bitboard(1) << move.from);
 			position.allBlackPeaces &= ~(Bitboard(1) << move.to);
 			position.material += PieceCosts[move.transformPiece] - 1 + PieceCosts[move.opFigure];
+			position.zobristHash ^= zobristCache[WHITE][move.opFigure][move.to];
 		}
 		break;
 	}
@@ -587,8 +676,9 @@ void MoveGen::unMakeMove(Position& position, TMove move)
 	position.activeColor = prevActiveColor; 
 }
 
-TMove* MoveGen::generateAndSortAllCaptures(Position& position)
+TMove* MoveGen::generateAndSortAllCaptures(Position& position,int& size)
 {
+	
 	TMove* Captures = new TMove[50];
 	int captureIndex = 0;
 	int prevMovePieceType = position.pieceHash[position.prevMove.to].type;
@@ -906,12 +996,13 @@ TMove* MoveGen::generateAndSortAllCaptures(Position& position)
 		}
 	}
 
-	Captures[captureIndex].transformPiece = PAWN;
+	size = captureIndex;
+	//Captures[captureIndex].transformPiece = PAWN;
 
 	return Captures;
 }
 
-TMove* MoveGen::generateAndSortAllQuietMoves(Position& position)
+TMove* MoveGen::generateAndSortAllQuietMoves(Position& position,int& size)
 {
 	TMove* moves = new TMove[150];
 	int movesIndex = 0;
@@ -925,13 +1016,17 @@ TMove* MoveGen::generateAndSortAllQuietMoves(Position& position)
 		moves[movesIndex].from = ((activeColor == WHITE) ? 3 : 59);
 		moves[movesIndex].to = ((activeColor == WHITE) ? 1 : 57);
 		moves[movesIndex].moveType = SHORT_CASTLE;
+		moves[movesIndex].opFigure = NO_TYPE;
+		moves[movesIndex].transformPiece = NO_TYPE;
 		++movesIndex;
 	}
 	if (isCastlingPossible(position, LONG_CASTLE) && kingSq != Bitboard(0))
 	{
 		moves[movesIndex].from = ((activeColor == WHITE) ? 3 : 59);
-		moves[movesIndex].to = ((activeColor == WHITE) ? 1 : 57);
+		moves[movesIndex].to = ((activeColor == WHITE) ? 5 : 61);
 		moves[movesIndex].moveType = LONG_CASTLE;
+		moves[movesIndex].opFigure = NO_TYPE;
+		moves[movesIndex].transformPiece = NO_TYPE;
 		++movesIndex;
 	}
 
@@ -948,7 +1043,7 @@ TMove* MoveGen::generateAndSortAllQuietMoves(Position& position)
 				moves[movesIndex].from = queenSq;
 				moves[movesIndex].to = moveSq;
 				moves[movesIndex].moveType = DEFAULT_MOVE;
-				moves[movesIndex].opFigure = position.pieceHash[moveSq].type;
+				moves[movesIndex].opFigure = NO_TYPE;
 				moves[movesIndex].sortField = 0;
 				moves[movesIndex].transformPiece = NO_TYPE;
 				movesIndex++;
@@ -967,7 +1062,7 @@ TMove* MoveGen::generateAndSortAllQuietMoves(Position& position)
 				moves[movesIndex].from = rookSq;
 				moves[movesIndex].to = moveSq;
 				moves[movesIndex].moveType = DEFAULT_MOVE;
-				moves[movesIndex].opFigure = position.pieceHash[moveSq].type;
+				moves[movesIndex].opFigure = NO_TYPE;
 				moves[movesIndex].sortField = 0;
 				moves[movesIndex].transformPiece = NO_TYPE;
 				movesIndex++;
@@ -986,7 +1081,7 @@ TMove* MoveGen::generateAndSortAllQuietMoves(Position& position)
 				moves[movesIndex].from = bishopSq;
 				moves[movesIndex].to = moveSq;
 				moves[movesIndex].moveType = DEFAULT_MOVE;
-				moves[movesIndex].opFigure = position.pieceHash[moveSq].type;
+				moves[movesIndex].opFigure = NO_TYPE;
 				moves[movesIndex].sortField = 0;
 				moves[movesIndex].transformPiece = NO_TYPE;
 				movesIndex++;
@@ -1018,7 +1113,7 @@ TMove* MoveGen::generateAndSortAllQuietMoves(Position& position)
 		{
 			int pawnSq = bitScanForward(pawns);
 			Bitboard pawnMoves = getCachedPawnMoves(pawnSq, WHITE) & ~position.allPeaces;
-			if (pawnMoves == Bitboard(1) << (pawnSq + 16))
+			if (pawnMoves == (Bitboard(1) << (pawnSq + 16)))
 			{
 				pawns &= pawns - 1;
 				continue;
@@ -1026,28 +1121,27 @@ TMove* MoveGen::generateAndSortAllQuietMoves(Position& position)
 			while (pawnMoves)
 			{
 				int moveSq = bitScanForward(pawnMoves);
-				if (position.pieceHash[moveSq].type == NO_TYPE)
+				if (moveSq > 55)
 				{
-					if (moveSq > 55)
-					{
-						for (int i = PieceTypes::QUEEN; i <= PieceTypes::KNIGHT; i++)
-						{
-							moves[movesIndex].from = pawnSq;
-							moves[movesIndex].to = moveSq;
-							moves[movesIndex].moveType = TRANSFORM;
-							moves[movesIndex].transformPiece = i;
-							++movesIndex;
-						}
-					}
-					else
+					for (int i = PieceTypes::QUEEN; i <= PieceTypes::KNIGHT; i++)
 					{
 						moves[movesIndex].from = pawnSq;
 						moves[movesIndex].to = moveSq;
-						moves[movesIndex].moveType = ((moveSq - pawnSq == 16) ? FIRST_PAWN_MOVE : DEFAULT_MOVE);
+						moves[movesIndex].moveType = TRANSFORM;
+						moves[movesIndex].transformPiece = i;
+						moves[movesIndex].opFigure = NO_TYPE;
 						++movesIndex;
 					}
-
 				}
+				else
+				{
+					moves[movesIndex].from = pawnSq;
+					moves[movesIndex].to = moveSq;
+					moves[movesIndex].moveType = ((moveSq - pawnSq == 16) ? FIRST_PAWN_MOVE : DEFAULT_MOVE);
+					moves[movesIndex].transformPiece = NO_TYPE;
+					moves[movesIndex].opFigure = NO_TYPE;
+					++movesIndex;
+				}				
 				pawnMoves &= pawnMoves - 1;
 			}
 			pawns &= pawns - 1;
@@ -1062,6 +1156,8 @@ TMove* MoveGen::generateAndSortAllQuietMoves(Position& position)
 				moves[movesIndex].from = kingSq;
 				moves[movesIndex].to = moveSq;
 				moves[movesIndex].moveType = DEFAULT_MOVE;
+				moves[movesIndex].opFigure = NO_TYPE;
+				moves[movesIndex].transformPiece = NO_TYPE;
 				++movesIndex;
 				kingMoves &= kingMoves - 1;
 			}
@@ -1080,7 +1176,7 @@ TMove* MoveGen::generateAndSortAllQuietMoves(Position& position)
 				moves[movesIndex].from = queenSq;
 				moves[movesIndex].to = moveSq;
 				moves[movesIndex].moveType = DEFAULT_MOVE;
-				moves[movesIndex].opFigure = position.pieceHash[moveSq].type;
+				moves[movesIndex].opFigure = NO_TYPE;
 				moves[movesIndex].sortField = 0;
 				moves[movesIndex].transformPiece = NO_TYPE;
 				movesIndex++;
@@ -1099,7 +1195,7 @@ TMove* MoveGen::generateAndSortAllQuietMoves(Position& position)
 				moves[movesIndex].from = rookSq;
 				moves[movesIndex].to = moveSq;
 				moves[movesIndex].moveType = DEFAULT_MOVE;
-				moves[movesIndex].opFigure = position.pieceHash[moveSq].type;
+				moves[movesIndex].opFigure = NO_TYPE;
 				moves[movesIndex].sortField = 0;
 				moves[movesIndex].transformPiece = NO_TYPE;
 				movesIndex++;
@@ -1118,7 +1214,7 @@ TMove* MoveGen::generateAndSortAllQuietMoves(Position& position)
 				moves[movesIndex].from = bishopSq;
 				moves[movesIndex].to = moveSq;
 				moves[movesIndex].moveType = DEFAULT_MOVE;
-				moves[movesIndex].opFigure = position.pieceHash[moveSq].type;
+				moves[movesIndex].opFigure = NO_TYPE;
 				moves[movesIndex].sortField = 0;
 				moves[movesIndex].transformPiece = NO_TYPE;
 				movesIndex++;
@@ -1137,7 +1233,7 @@ TMove* MoveGen::generateAndSortAllQuietMoves(Position& position)
 				moves[movesIndex].from = knightSq;
 				moves[movesIndex].to = moveSq;
 				moves[movesIndex].moveType = DEFAULT_MOVE;
-				moves[movesIndex].opFigure = position.pieceHash[moveSq].type;
+				moves[movesIndex].opFigure = NO_TYPE;
 				moves[movesIndex].sortField = 0;
 				moves[movesIndex].transformPiece = NO_TYPE;
 				movesIndex++;
@@ -1150,7 +1246,7 @@ TMove* MoveGen::generateAndSortAllQuietMoves(Position& position)
 		{
 			int pawnSq = bitScanForward(pawns);
 			Bitboard pawnMoves = getCachedPawnMoves(pawnSq, BLACK) & ~position.allPeaces;
-			if (pawnMoves == Bitboard(1) << (pawnSq - 16))
+			if (pawnMoves == (Bitboard(1) << (pawnSq - 16)))
 			{
 				pawns &= pawns - 1;
 				continue;
@@ -1158,28 +1254,25 @@ TMove* MoveGen::generateAndSortAllQuietMoves(Position& position)
 			while (pawnMoves)
 			{
 				int moveSq = bitScanForward(pawnMoves);
-
-				if (position.pieceHash[moveSq].type == NO_TYPE)
+				if (moveSq < 8)
 				{
-					if (moveSq < 8)
-					{
-						for (int i = PieceTypes::QUEEN; i <= PieceTypes::KNIGHT; i++)
-						{
-							moves[movesIndex].from = pawnSq;
-							moves[movesIndex].to = moveSq;
-							moves[movesIndex].moveType = TRANSFORM;
-							moves[movesIndex].transformPiece = i;
-							++movesIndex;
-						}
-					}
-					else
+					for (int i = PieceTypes::QUEEN; i <= PieceTypes::KNIGHT; i++)
 					{
 						moves[movesIndex].from = pawnSq;
 						moves[movesIndex].to = moveSq;
-						moves[movesIndex].moveType = ((pawnSq - moveSq == 16) ? FIRST_PAWN_MOVE : DEFAULT_MOVE);
+						moves[movesIndex].moveType = TRANSFORM;
+						moves[movesIndex].transformPiece = i;
+						moves[movesIndex].opFigure = NO_TYPE;
 						++movesIndex;
 					}
-
+				}
+				else
+				{
+					moves[movesIndex].from = pawnSq;
+					moves[movesIndex].to = moveSq;
+					moves[movesIndex].moveType = ((pawnSq - moveSq == 16) ? FIRST_PAWN_MOVE : DEFAULT_MOVE);
+					moves[movesIndex].opFigure = NO_TYPE;
+					++movesIndex;
 				}
 				pawnMoves &= pawnMoves - 1;
 			}
@@ -1195,40 +1288,43 @@ TMove* MoveGen::generateAndSortAllQuietMoves(Position& position)
 				moves[movesIndex].from = kingSq;
 				moves[movesIndex].to = moveSq;
 				moves[movesIndex].moveType = DEFAULT_MOVE;
+				moves[movesIndex].opFigure = NO_TYPE;
 				++movesIndex;
 				kingMoves &= kingMoves - 1;
 			}
 		}
 	}
 
-	moves[movesIndex].transformPiece = PAWN;
+	size = movesIndex;
+	//moves[movesIndex].transformPiece = PAWN;
 	// TODO ADD SORT 
 
 	return moves;
 }
 
-TMove* MoveGen::generateAndSortAllMoves(Position& position)
+TMove* MoveGen::generateAndSortAllMoves(Position& position,int& size)
 {
-	TMove* captures = generateAndSortAllCaptures(position);
-	TMove* moves = generateAndSortAllQuietMoves(position);
-	TMove* allMoves = new TMove[200];
-	int i = 0;
-	int j = 0;
-	while (captures[i].transformPiece != PAWN)
-	{
-		allMoves[i] = captures[i];
-		++i;
-	}
-	while (moves[j].transformPiece != PAWN)
-	{
-		allMoves[i] = moves[j];
-		++i; ++j;
-	}
-	allMoves[i].transformPiece = PAWN;
+	int captureSize = 0, quietMovesSize = 0;
+	/*TMove* captures = NULL;
+	TMove* quietMoves = NULL;
+	auto threadfunc1 = [captures,position, captureSize]() mutable 
+		{captures = generateAndSortAllCaptures(position, captureSize); };
+	auto threadfunc2 = [quietMoves, position, quietMovesSize]()
+		mutable {quietMoves = generateAndSortAllQuietMoves(position, quietMovesSize); };
 	
+	std::thread a = std::thread(threadfunc1);
+	std::thread b = std::thread(threadfunc2);
+	
+	a.join();
+	b.join();*/
+	TMove* captures = generateAndSortAllCaptures(position,captureSize);
+	TMove* quietMoves = generateAndSortAllQuietMoves(position,quietMovesSize);
+	size = captureSize + quietMovesSize;
+	TMove* allMoves = new TMove[size];
+	memcpy(allMoves, captures, sizeof(TMove) * captureSize);
+	memcpy(&allMoves[captureSize], quietMoves, sizeof(TMove) * quietMovesSize);
 	delete[] captures;
-	delete[] moves;
-
+	delete[] quietMoves;
 	return allMoves;
 }
 
@@ -1428,6 +1524,22 @@ void MoveGen::initQueenCache()
 			Bitboard blockers = _pdep_u64(blocker_index, queenMasks[sq]);
 			Bitboard key = _pext_u64(blockers, queenMasks[sq]);
 			queenCache[sq][key] = getQueenMoves(sq, blockers);
+		}
+	}
+}
+
+void MoveGen::initZobristCache()
+{
+	for (int i = 0; i < 2; i++)
+	{
+		for (int j = 0; j < 6; j++)
+		{
+			for (int k = 0; k < 64; k++)
+			{
+				zobristCache[i][j][k] = random_uint64() ^
+					(random_uint64() << 15) ^ (random_uint64() << 31) ^
+					(random_uint64() << 47) ^ (random_uint64() << 59);
+			}
 		}
 	}
 }
@@ -1662,10 +1774,10 @@ bool MoveGen::checkDetector(int kingsq, int kingcolor,
 	}
 }
 
-void MoveGen::showMoveList(TMove* list)
+void MoveGen::showMoveList(TMove* list,int size)
 {
 	int i = 0;
-	while (list[i].transformPiece != PAWN)
+	while (i < size)
 	{
 		std::string pieces[7]{ "KING","QUEEN","ROOK","BISHOP","KNIGHT","PAWN","NO_TYPE"};
 		std::string moveTypes[8]{ "DEFAULT_MOVE", "CAPTURE", "FIRST_PAWN_MOVE", "EN_PASSANT", "LONG_CASTLE", "SHORT_CASTLE", "TRANSFORM", "CAPTURE_TRANSFORM" };
@@ -1702,49 +1814,15 @@ bool MoveGen::isCastlingPossible(Position& pos, int CastleType)
 	}
 }
 
-//void MoveGen::Perft(Position& pos,int depth)
-//{
-//	if (depth == 5)
-//	{
-//		perftpos = Game::getFullPositionInfo(pos);
-//	}
-//	if (depth == 0) return;
-//	TMove* moves = generateAndSortAllMoves(pos);
-//	int i = 0;
-//	while (moves[i].transformPiece != PAWN)
-//	{
-//		makeMove(pos, moves[i]);
-//		moveLine[5 - depth] = moves[i];
-//		Perft(pos, depth - 1);
-//		unMakeMove(pos, moves[i]);
-//		if (strcmp(perftpos.c_str(), Game::getFullPositionInfo(pos).c_str()) != 0 && depth == 5)
-//		{
-//			std::cout << "wrong!!!\n";
-//			moveLine[6].transformPiece = PAWN;
-//			showMoveList(moveLine);
-//			//std::cout << Game::getFullPositionInfo(pos);
-//			return;
-//		} 
-//		++i;
-//	}
-//	if (depth != 5) return;
-//	moveLine[6].transformPiece = PAWN;
-//	//showMoveList(moveLine);
-//}
+uint_64 MoveGen::random_uint64()
+{
+	std::random_device rd;
+	std::mt19937_64 eng(rd());
+	std::uniform_int_distribution<uint_64> distr;
+	return distr(eng);
+}
 
-//void MoveGen::Test(Position& pos)
-//{
-//	for (int i = 0; i <= 4; i++)
-//	{
-//		makeMove(pos, moveLine[i]);
-//		std::cout << "\n\n" << Game::getFullPositionInfo(pos)<<"\n\n";
-//	}
-//	for (int i = 4; i >= 0 ; i--)
-//	{
-//		unMakeMove(pos, moveLine[i]);
-//		std::cout << "\n\n" << Game::getFullPositionInfo(pos) << "\n\n";
-//	}
-//
-//
-//}
+
+
+
 

@@ -16,6 +16,8 @@ using namespace MoveGenConstants;
 
 namespace MoveGen{
 
+	extern uint_64 zobristCache[2][6][64];
+
 	// All precalculated arrays were initialized in the constructor
 	void InitMoveGen();
 
@@ -24,11 +26,11 @@ namespace MoveGen{
 
 	void unMakeMove(Position& position, TMove move);
 
-	TMove* generateAndSortAllCaptures(Position& position);
+	TMove* generateAndSortAllCaptures(Position& position,int& size);
 
-	TMove* generateAndSortAllQuietMoves(Position& position);
+	TMove* generateAndSortAllQuietMoves(Position& position,int& size);
 
-	TMove* generateAndSortAllMoves(Position& position);
+	TMove* generateAndSortAllMoves(Position& position,int& size);
 
 
 		// View bitboard to stdout or file
@@ -82,6 +84,8 @@ namespace MoveGen{
 
 	void initQueenCache();
 
+	void initZobristCache();
+
 	// Return bitboard with all moves of pawns without captures ( including FIRST_PAWN_MOVE )
 	Bitboard getPawnMoves(PieceColors color, Bitboard pawns);
 
@@ -130,9 +134,12 @@ namespace MoveGen{
 		int lastmovefiguretype, int lastmovefiguresq, Bitboard blockers);
 
 	// Show Move List at Native 
-	void showMoveList(TMove* list);
+	void showMoveList(TMove* list,int size);
 
 	bool isCastlingPossible(Position& pos, int CastleType);
+
+
+	uint64_t random_uint64();
 
 
 };

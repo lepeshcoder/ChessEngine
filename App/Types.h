@@ -7,6 +7,8 @@
 #include<map>
 #include<iostream>
 #include<sstream>
+#include<random>
+#include<thread>
 
 
 
@@ -30,7 +32,7 @@ enum PieceTypes { KING = 0, QUEEN, ROOK, BISHOP, KNIGHT, PAWN, NO_TYPE };
 
 enum PieceColors { WHITE = 0, BLACK, NO_COLOR };
 
-constexpr int PieceCosts[6]{ 1000,9,5,3,3,1 };
+constexpr int PieceCosts[7]{ 1000,9,5,3,3,1,0 };
 
 struct TMove
 {
@@ -58,7 +60,7 @@ struct TMove
 	uint_8 opFigure;
 	// in case CAPTURE_TRANSFORM contains the type of piece the pawn has become
 	uint_8 transformPiece;
-	int_8 sortField;
+	int_32 sortField;
 };
 
 struct PosInfo {
@@ -104,6 +106,7 @@ struct Position
 		activeColor = NO_COLOR;
 		wShortCastle = wLongCastle = bShortCastle = bLongCastle = false;
 		fiftyMovesRule = moveCounter = material = 0;
+		zobristHash = uint_64(0);
 	}
 
 	// Piece list
@@ -118,6 +121,7 @@ struct Position
 	uint_8 moveCounter;
 	int_8 material; // position evaluation score (Including only figures) 
 	TMove prevMove;
+	uint_64 zobristHash; 
 };
 
 
